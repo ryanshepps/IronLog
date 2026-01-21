@@ -337,6 +337,7 @@ export default function LogScreen() {
         }}
         onSave={handleSaveSet}
         onDelete={editingSet ? handleDeleteSet : undefined}
+        exerciseId={selectedExercise?.exerciseId || ""}
         exerciseName={selectedExercise?.exerciseName || ""}
         lastPerformance={
           selectedExercise

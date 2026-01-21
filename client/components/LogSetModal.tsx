@@ -8,6 +8,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { NumericInput } from "@/components/NumericInput";
 import { FeelingRating } from "@/components/FeelingRating";
+import { ExerciseHistoryModal } from "@/components/ExerciseHistoryModal";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { WorkoutSet, ExerciseHistory } from "@/types/workout";
@@ -17,6 +18,7 @@ interface LogSetModalProps {
   onClose: () => void;
   onSave: (weight: number, reps: number, feeling: number) => void;
   onDelete?: () => void;
+  exerciseId: string;
   exerciseName: string;
   lastPerformance?: ExerciseHistory | null;
   editingSet?: WorkoutSet | null;
@@ -29,6 +31,7 @@ export function LogSetModal({
   onClose,
   onSave,
   onDelete,
+  exerciseId,
   exerciseName,
   lastPerformance,
   editingSet,
@@ -41,6 +44,7 @@ export function LogSetModal({
   const [weight, setWeight] = useState(0);
   const [reps, setReps] = useState(0);
   const [feeling, setFeeling] = useState(5);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -106,7 +110,13 @@ export function LogSetModal({
           <ThemedText type="h4" numberOfLines={1} style={styles.headerTitle}>
             {exerciseName}
           </ThemedText>
-          <View style={{ width: 40 }} />
+          <Pressable 
+            onPress={() => setShowHistory(true)} 
+            hitSlop={12}
+            style={styles.historyButton}
+          >
+            <Feather name="bar-chart-2" size={20} color={theme.primary} />
+          </Pressable>
         </View>
 
         <ScrollView 
@@ -287,6 +297,14 @@ export function LogSetModal({
           )}
         </View>
       </ThemedView>
+
+      <ExerciseHistoryModal
+        visible={showHistory}
+        onClose={() => setShowHistory(false)}
+        exerciseId={exerciseId}
+        exerciseName={exerciseName}
+        units={units}
+      />
     </Modal>
   );
 }
@@ -308,6 +326,10 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "center",
     marginHorizontal: Spacing.md,
+  },
+  historyButton: {
+    width: 40,
+    alignItems: "flex-end",
   },
   scrollView: {
     flex: 1,

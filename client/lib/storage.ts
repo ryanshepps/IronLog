@@ -215,3 +215,60 @@ export function formatDate(date: Date): string {
 export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
+
+export interface ExercisePerformanceEntry {
+  date: string;
+  weight: number;
+  reps: number;
+  feeling: number;
+  timestamp: number;
+  totalVolume: number;
+  bestSet: { weight: number; reps: number };
+}
+
+export async function getExercisePerformanceHistory(
+  exerciseId: string
+): Promise<ExercisePerformanceEntry[]> {
+  try {
+    const workouts = await getWorkouts();
+    const currentWorkout = await getCurrentWorkout();
+    
+    const allWorkouts = currentWorkout 
+      ? [currentWorkout, ...workouts.filter(w => w.id !== currentWorkout.id)]
+      : workouts;
+    
+    const entries: ExercisePerformanceEntry[] = [];
+    
+    for (const workout of allWorkouts) {
+      const exercise = workout.exercises.find(e => e.exerciseId === exerciseId);
+      if (exercise && exercise.sets.length > 0) {
+        const sets = exercise.sets;
+        const totalVolume = sets.reduce((acc, s) => acc + s.weight * s.reps, 0);
+        const bestSet = sets.reduce((best, s) => 
+          s.weight > best.weight ? s : best
+        , sets[0]);
+        const avgFeeling = Math.round(
+          sets.reduce((acc, s) => acc + s.feeling, 0) / sets.length
+        );
+        
+        entries.push({
+          date: workout.date,
+          weight: bestSet.weight,
+          reps: bestSet.reps,
+          feeling: avgFeeling,
+          timestamp: sets[0].timestamp,
+          totalVolume,
+          bestSet: { weight: bestSet.weight, reps: bestSet.reps },
+        });
+      }
+    }
+    
+    // Sort by date descending (most recent first)
+    entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    return entries;
+  } catch (error) {
+    console.error("Error getting exercise performance history:", error);
+    return [];
+  }
+}
