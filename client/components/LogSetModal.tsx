@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Modal, Pressable, Platform } from "react-native";
+import { View, StyleSheet, Modal, Pressable, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, { FadeIn, Layout } from "react-native-reanimated";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { NumericInput } from "@/components/NumericInput";
@@ -20,6 +21,7 @@ interface LogSetModalProps {
   lastPerformance?: ExerciseHistory | null;
   editingSet?: WorkoutSet | null;
   units: "kg" | "lbs";
+  currentSets?: WorkoutSet[];
 }
 
 export function LogSetModal({
@@ -31,6 +33,7 @@ export function LogSetModal({
   lastPerformance,
   editingSet,
   units,
+  currentSets = [],
 }: LogSetModalProps) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -45,6 +48,12 @@ export function LogSetModal({
         setWeight(editingSet.weight);
         setReps(editingSet.reps);
         setFeeling(editingSet.feeling);
+      } else if (currentSets.length > 0) {
+        // Use the last logged set's values for the next set
+        const lastSet = currentSets[currentSets.length - 1];
+        setWeight(lastSet.weight);
+        setReps(lastSet.reps);
+        setFeeling(lastSet.feeling);
       } else if (lastPerformance) {
         setWeight(lastPerformance.lastWeight);
         setReps(lastPerformance.lastReps);
@@ -55,12 +64,18 @@ export function LogSetModal({
         setFeeling(5);
       }
     }
-  }, [visible, editingSet, lastPerformance]);
+  }, [visible, editingSet, lastPerformance, currentSets.length]);
 
-  const handleSave = () => {
+  const handleSaveAndClose = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     onSave(weight, reps, feeling);
     onClose();
+  };
+
+  const handleAddAnother = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onSave(weight, reps, feeling);
+    // Values stay the same for next set - user can adjust if needed
   };
 
   const handleDelete = () => {
@@ -85,23 +100,52 @@ export function LogSetModal({
         <View style={styles.header}>
           <Pressable onPress={onClose} hitSlop={12}>
             <ThemedText type="body" style={{ color: theme.primary }}>
-              Cancel
+              Done
             </ThemedText>
           </Pressable>
           <ThemedText type="h4" numberOfLines={1} style={styles.headerTitle}>
             {exerciseName}
           </ThemedText>
-          <Pressable onPress={handleSave} hitSlop={12}>
-            <ThemedText
-              type="body"
-              style={{ color: theme.primary, fontWeight: "600" }}
-            >
-              Save
-            </ThemedText>
-          </Pressable>
+          <View style={{ width: 40 }} />
         </View>
 
-        <View style={styles.content}>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Show already logged sets */}
+          {!editingSet && currentSets.length > 0 ? (
+            <View style={styles.loggedSetsSection}>
+              <ThemedText
+                type="small"
+                style={[styles.sectionLabel, { color: theme.textSecondary }]}
+              >
+                Sets logged this session
+              </ThemedText>
+              <View style={styles.loggedSetsList}>
+                {currentSets.map((set, index) => (
+                  <Animated.View
+                    key={set.id}
+                    entering={FadeIn.duration(200)}
+                    layout={Layout.springify()}
+                    style={[
+                      styles.loggedSetChip,
+                      { backgroundColor: theme.primary + "20" },
+                    ]}
+                  >
+                    <ThemedText type="body" style={{ fontWeight: "600" }}>
+                      {index + 1}.
+                    </ThemedText>
+                    <ThemedText type="body">
+                      {set.weight}{units} x {set.reps}
+                    </ThemedText>
+                  </Animated.View>
+                ))}
+              </View>
+            </View>
+          ) : null}
+
           {showSuggestion ? (
             <View
               style={[
@@ -118,6 +162,13 @@ export function LogSetModal({
               </ThemedText>
             </View>
           ) : null}
+
+          <ThemedText
+            type="small"
+            style={[styles.sectionLabel, { color: theme.textSecondary }]}
+          >
+            {editingSet ? "Edit set" : `Set ${currentSets.length + 1}`}
+          </ThemedText>
 
           <View style={styles.inputsRow}>
             <View style={styles.inputWrapper}>
@@ -170,27 +221,70 @@ export function LogSetModal({
               </ThemedText>
             </Pressable>
           ) : null}
-        </View>
+        </ScrollView>
 
         <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}>
-          <Pressable
-            onPress={handleSave}
-            style={({ pressed }) => [
-              styles.saveButton,
-              {
-                backgroundColor: theme.primary,
-                opacity: pressed ? 0.9 : 1,
-                transform: [{ scale: pressed ? 0.98 : 1 }],
-              },
-            ]}
-          >
-            <ThemedText
-              type="body"
-              style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 18 }}
+          {editingSet ? (
+            <Pressable
+              onPress={handleSaveAndClose}
+              style={({ pressed }) => [
+                styles.saveButton,
+                {
+                  backgroundColor: theme.primary,
+                  opacity: pressed ? 0.9 : 1,
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
+                },
+              ]}
             >
-              {editingSet ? "Update Set" : "Log Set"}
-            </ThemedText>
-          </Pressable>
+              <ThemedText
+                type="body"
+                style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 18 }}
+              >
+                Update Set
+              </ThemedText>
+            </Pressable>
+          ) : (
+            <View style={styles.buttonRow}>
+              <Pressable
+                onPress={handleAddAnother}
+                style={({ pressed }) => [
+                  styles.addAnotherButton,
+                  {
+                    backgroundColor: theme.backgroundSecondary,
+                    borderColor: theme.primary,
+                    opacity: pressed ? 0.9 : 1,
+                  },
+                ]}
+              >
+                <Feather name="plus" size={20} color={theme.primary} />
+                <ThemedText
+                  type="body"
+                  style={{ color: theme.primary, fontWeight: "600" }}
+                >
+                  Add Set
+                </ThemedText>
+              </Pressable>
+              <Pressable
+                onPress={handleSaveAndClose}
+                style={({ pressed }) => [
+                  styles.doneButton,
+                  {
+                    backgroundColor: theme.primary,
+                    opacity: pressed ? 0.9 : 1,
+                    transform: [{ scale: pressed ? 0.98 : 1 }],
+                  },
+                ]}
+              >
+                <Feather name="check" size={20} color="#FFFFFF" />
+                <ThemedText
+                  type="body"
+                  style={{ color: "#FFFFFF", fontWeight: "700" }}
+                >
+                  Save & Done
+                </ThemedText>
+              </Pressable>
+            </View>
+          )}
         </View>
       </ThemedView>
     </Modal>
@@ -215,9 +309,31 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginHorizontal: Spacing.md,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  content: {
     padding: Spacing.xl,
+  },
+  loggedSetsSection: {
+    marginBottom: Spacing["2xl"],
+  },
+  sectionLabel: {
+    fontWeight: "600",
+    marginBottom: Spacing.sm,
+  },
+  loggedSetsList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+  },
+  loggedSetChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
   },
   suggestion: {
     flexDirection: "row",
@@ -252,6 +368,29 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: Spacing.xl,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  addAnotherButton: {
+    flex: 1,
+    height: Spacing.buttonHeight,
+    borderRadius: BorderRadius.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: Spacing.sm,
+    borderWidth: 2,
+  },
+  doneButton: {
+    flex: 1,
+    height: Spacing.buttonHeight,
+    borderRadius: BorderRadius.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: Spacing.sm,
   },
   saveButton: {
     height: Spacing.buttonHeight,

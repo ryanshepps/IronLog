@@ -345,6 +345,13 @@ export default function LogScreen() {
         }
         editingSet={editingSet}
         units={units}
+        currentSets={
+          selectedExercise
+            ? workout?.exercises.find(
+                (e) => e.exerciseId === selectedExercise.exerciseId
+              )?.sets || []
+            : []
+        }
       />
     </ThemedView>
   );
