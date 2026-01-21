@@ -18,6 +18,7 @@ interface LogSetModalProps {
   onClose: () => void;
   onSave: (weight: number, reps: number, feeling: number) => void;
   onDelete?: () => void;
+  onDeleteSet?: (setId: string) => void;
   exerciseId: string;
   exerciseName: string;
   lastPerformance?: ExerciseHistory | null;
@@ -31,6 +32,7 @@ export function LogSetModal({
   onClose,
   onSave,
   onDelete,
+  onDeleteSet,
   exerciseId,
   exerciseName,
   lastPerformance,
@@ -73,6 +75,10 @@ export function LogSetModal({
   const handleSaveAndClose = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     onSave(weight, reps, feeling);
+    onClose();
+  };
+
+  const handleDone = () => {
     onClose();
   };
 
@@ -131,26 +137,34 @@ export function LogSetModal({
                 type="small"
                 style={[styles.sectionLabel, { color: theme.textSecondary }]}
               >
-                Sets logged this session
+                Sets logged this session (tap to delete)
               </ThemedText>
               <View style={styles.loggedSetsList}>
                 {currentSets.map((set, index) => (
-                  <Animated.View
+                  <Pressable
                     key={set.id}
-                    entering={FadeIn.duration(200)}
-                    layout={Layout.springify()}
-                    style={[
-                      styles.loggedSetChip,
-                      { backgroundColor: theme.primary + "20" },
-                    ]}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      onDeleteSet?.(set.id);
+                    }}
                   >
-                    <ThemedText type="body" style={{ fontWeight: "600" }}>
-                      {index + 1}.
-                    </ThemedText>
-                    <ThemedText type="body">
-                      {set.weight}{units} x {set.reps}
-                    </ThemedText>
-                  </Animated.View>
+                    <Animated.View
+                      entering={FadeIn.duration(200)}
+                      layout={Layout.springify()}
+                      style={[
+                        styles.loggedSetChip,
+                        { backgroundColor: theme.primary + "20" },
+                      ]}
+                    >
+                      <ThemedText type="body" style={{ fontWeight: "600" }}>
+                        {index + 1}.
+                      </ThemedText>
+                      <ThemedText type="body">
+                        {set.weight}{units} x {set.reps}
+                      </ThemedText>
+                      <Feather name="x" size={14} color={theme.textSecondary} style={{ marginLeft: Spacing.xs }} />
+                    </Animated.View>
+                  </Pressable>
                 ))}
               </View>
             </View>
@@ -260,37 +274,36 @@ export function LogSetModal({
                 style={({ pressed }) => [
                   styles.addAnotherButton,
                   {
-                    backgroundColor: theme.backgroundSecondary,
-                    borderColor: theme.primary,
-                    opacity: pressed ? 0.9 : 1,
-                  },
-                ]}
-              >
-                <Feather name="plus" size={20} color={theme.primary} />
-                <ThemedText
-                  type="body"
-                  style={{ color: theme.primary, fontWeight: "600" }}
-                >
-                  Add Set
-                </ThemedText>
-              </Pressable>
-              <Pressable
-                onPress={handleSaveAndClose}
-                style={({ pressed }) => [
-                  styles.doneButton,
-                  {
                     backgroundColor: theme.primary,
                     opacity: pressed ? 0.9 : 1,
                     transform: [{ scale: pressed ? 0.98 : 1 }],
                   },
                 ]}
               >
-                <Feather name="check" size={20} color="#FFFFFF" />
+                <Feather name="plus" size={20} color="#FFFFFF" />
                 <ThemedText
                   type="body"
-                  style={{ color: "#FFFFFF", fontWeight: "700" }}
+                  style={{ color: "#FFFFFF", fontWeight: "600" }}
                 >
-                  Save & Done
+                  Add Set
+                </ThemedText>
+              </Pressable>
+              <Pressable
+                onPress={handleDone}
+                style={({ pressed }) => [
+                  styles.doneButton,
+                  {
+                    backgroundColor: theme.backgroundSecondary,
+                    borderColor: theme.textSecondary,
+                    opacity: pressed ? 0.9 : 1,
+                  },
+                ]}
+              >
+                <ThemedText
+                  type="body"
+                  style={{ color: theme.text, fontWeight: "600" }}
+                >
+                  Done
                 </ThemedText>
               </Pressable>
             </View>
@@ -396,14 +409,13 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   addAnotherButton: {
-    flex: 1,
+    flex: 1.5,
     height: Spacing.buttonHeight,
     borderRadius: BorderRadius.lg,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
     gap: Spacing.sm,
-    borderWidth: 2,
   },
   doneButton: {
     flex: 1,
@@ -413,6 +425,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexDirection: "row",
     gap: Spacing.sm,
+    borderWidth: 1,
   },
   saveButton: {
     height: Spacing.buttonHeight,

@@ -260,6 +260,24 @@ export default function LogScreen() {
     await saveCurrentWorkout(updatedWorkout);
   };
 
+  const handleDeleteSetById = async (setId: string) => {
+    if (!workout || !selectedExercise) return;
+
+    const updatedExercises = workout.exercises.map((ex) => {
+      if (ex.exerciseId === selectedExercise.exerciseId) {
+        return {
+          ...ex,
+          sets: ex.sets.filter((s) => s.id !== setId),
+        };
+      }
+      return ex;
+    });
+
+    const updatedWorkout = { ...workout, exercises: updatedExercises };
+    setWorkout(updatedWorkout);
+    await saveCurrentWorkout(updatedWorkout);
+  };
+
   const handleRemoveExercise = async (exerciseId: string) => {
     if (!workout) return;
 
@@ -337,6 +355,7 @@ export default function LogScreen() {
         }}
         onSave={handleSaveSet}
         onDelete={editingSet ? handleDeleteSet : undefined}
+        onDeleteSet={handleDeleteSetById}
         exerciseId={selectedExercise?.exerciseId || ""}
         exerciseName={selectedExercise?.exerciseName || ""}
         lastPerformance={
