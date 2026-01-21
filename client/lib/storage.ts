@@ -216,14 +216,18 @@ export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-export interface ExercisePerformanceEntry {
-  date: string;
+export interface SetDetail {
   weight: number;
   reps: number;
   feeling: number;
+}
+
+export interface ExercisePerformanceEntry {
+  date: string;
   timestamp: number;
   totalVolume: number;
-  bestSet: { weight: number; reps: number };
+  sets: SetDetail[];
+  bestWeight: number;
 }
 
 export async function getExercisePerformanceHistory(
@@ -244,21 +248,18 @@ export async function getExercisePerformanceHistory(
       if (exercise && exercise.sets.length > 0) {
         const sets = exercise.sets;
         const totalVolume = sets.reduce((acc, s) => acc + s.weight * s.reps, 0);
-        const bestSet = sets.reduce((best, s) => 
-          s.weight > best.weight ? s : best
-        , sets[0]);
-        const avgFeeling = Math.round(
-          sets.reduce((acc, s) => acc + s.feeling, 0) / sets.length
-        );
+        const bestWeight = Math.max(...sets.map(s => s.weight));
         
         entries.push({
           date: workout.date,
-          weight: bestSet.weight,
-          reps: bestSet.reps,
-          feeling: avgFeeling,
           timestamp: sets[0].timestamp,
           totalVolume,
-          bestSet: { weight: bestSet.weight, reps: bestSet.reps },
+          sets: sets.map(s => ({
+            weight: s.weight,
+            reps: s.reps,
+            feeling: s.feeling,
+          })),
+          bestWeight,
         });
       }
     }

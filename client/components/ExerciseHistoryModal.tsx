@@ -47,7 +47,7 @@ function ProgressChart({
   // Reverse so oldest is first for chart
   const chartData = [...data].reverse().slice(-10);
   
-  const weights = chartData.map(d => d.weight);
+  const weights = chartData.map(d => d.bestWeight);
   const minWeight = Math.min(...weights);
   const maxWeight = Math.max(...weights);
   const weightRange = maxWeight - minWeight || 10;
@@ -65,11 +65,11 @@ function ProgressChart({
     return CHART_HEIGHT - CHART_PADDING / 2 - normalized * usableHeight;
   };
 
-  // Create path
+  // Create path using best weight per session
   let pathD = "";
   chartData.forEach((entry, index) => {
     const x = getX(index);
-    const y = getY(entry.weight);
+    const y = getY(entry.bestWeight);
     if (index === 0) {
       pathD += `M ${x} ${y}`;
     } else {
@@ -78,8 +78,8 @@ function ProgressChart({
   });
 
   // Calculate trend
-  const firstWeight = chartData[0].weight;
-  const lastWeight = chartData[chartData.length - 1].weight;
+  const firstWeight = chartData[0].bestWeight;
+  const lastWeight = chartData[chartData.length - 1].bestWeight;
   const trend = lastWeight - firstWeight;
   const trendPercent = firstWeight > 0 ? ((trend / firstWeight) * 100).toFixed(1) : "0";
 
@@ -163,7 +163,7 @@ function ProgressChart({
           <Circle
             key={index}
             cx={getX(index)}
-            cy={getY(entry.weight)}
+            cy={getY(entry.bestWeight)}
             r={5}
             fill={theme.primary}
             stroke={theme.backgroundDefault}
@@ -199,7 +199,7 @@ function HistoryEntry({
       ]}
     >
       <View style={styles.entryHeader}>
-        <View>
+        <View style={styles.entryHeaderLeft}>
           <ThemedText type="body" style={{ fontWeight: "600" }}>
             {date.toLocaleDateString("en-US", {
               weekday: "short",
@@ -215,36 +215,48 @@ function HistoryEntry({
             </View>
           ) : null}
         </View>
-        <FeelingDots feeling={entry.feeling} size="small" />
+        <ThemedText type="small" style={{ color: theme.textSecondary }}>
+          {entry.sets.length} {entry.sets.length === 1 ? "set" : "sets"} · {entry.totalVolume.toLocaleString()} vol
+        </ThemedText>
       </View>
 
-      <View style={styles.entryStats}>
-        <View style={styles.entryStat}>
-          <ThemedText type="h3" style={{ color: theme.primary }}>
-            {entry.bestSet.weight}
+      <View style={styles.setsTable}>
+        <View style={styles.setsTableHeader}>
+          <ThemedText type="small" style={[styles.setColumn, { color: theme.textSecondary }]}>
+            Set
           </ThemedText>
-          <ThemedText type="small" style={{ color: theme.textSecondary }}>
-            {units}
+          <ThemedText type="small" style={[styles.weightColumn, { color: theme.textSecondary }]}>
+            Weight
           </ThemedText>
-        </View>
-        <View style={styles.entryStatDivider} />
-        <View style={styles.entryStat}>
-          <ThemedText type="h3">
-            {entry.bestSet.reps}
+          <ThemedText type="small" style={[styles.repsColumn, { color: theme.textSecondary }]}>
+            Reps
           </ThemedText>
-          <ThemedText type="small" style={{ color: theme.textSecondary }}>
-            reps
+          <ThemedText type="small" style={[styles.feelingColumn, { color: theme.textSecondary }]}>
+            RPE
           </ThemedText>
         </View>
-        <View style={styles.entryStatDivider} />
-        <View style={styles.entryStat}>
-          <ThemedText type="h4" style={{ color: theme.textSecondary }}>
-            {entry.totalVolume.toLocaleString()}
-          </ThemedText>
-          <ThemedText type="small" style={{ color: theme.textSecondary }}>
-            volume
-          </ThemedText>
-        </View>
+        {entry.sets.map((set, setIndex) => (
+          <View 
+            key={setIndex} 
+            style={[
+              styles.setRow,
+              { borderTopColor: theme.textSecondary + "20" },
+            ]}
+          >
+            <ThemedText type="body" style={[styles.setColumn, { color: theme.textSecondary }]}>
+              {setIndex + 1}
+            </ThemedText>
+            <ThemedText type="body" style={[styles.weightColumn, { fontWeight: "600" }]}>
+              {set.weight} {units}
+            </ThemedText>
+            <ThemedText type="body" style={styles.repsColumn}>
+              {set.reps}
+            </ThemedText>
+            <View style={styles.feelingColumn}>
+              <FeelingDots feeling={set.feeling} size="small" />
+            </View>
+          </View>
+        ))}
       </View>
     </Animated.View>
   );
@@ -276,7 +288,7 @@ export function ExerciseHistoryModal({
   }, [visible, loadHistory]);
 
   const personalRecord = history.length > 0
-    ? Math.max(...history.map(h => h.weight))
+    ? Math.max(...history.map(h => h.bestWeight))
     : 0;
 
   return (
@@ -434,24 +446,43 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: Spacing.md,
   },
+  entryHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
   latestBadge: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: BorderRadius.xs,
+  },
+  setsTable: {
     marginTop: Spacing.xs,
   },
-  entryStats: {
+  setsTableHeader: {
+    flexDirection: "row",
+    paddingBottom: Spacing.xs,
+  },
+  setRow: {
     flexDirection: "row",
     alignItems: "center",
+    paddingVertical: Spacing.sm,
+    borderTopWidth: 1,
   },
-  entryStat: {
+  setColumn: {
+    width: 36,
+    textAlign: "center",
+  },
+  weightColumn: {
     flex: 1,
-    alignItems: "center",
   },
-  entryStatDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: "rgba(128, 128, 128, 0.2)",
+  repsColumn: {
+    width: 50,
+    textAlign: "center",
+  },
+  feelingColumn: {
+    width: 80,
+    alignItems: "flex-end",
   },
   emptyHistory: {
     borderRadius: BorderRadius.xl,
