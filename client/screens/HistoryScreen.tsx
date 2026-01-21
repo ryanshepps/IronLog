@@ -11,9 +11,10 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { EmptyState } from "@/components/EmptyState";
 import { FeelingDots } from "@/components/FeelingRating";
+import { ExerciseHistoryModal } from "@/components/ExerciseHistoryModal";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { Workout, UserPreferences } from "@/types/workout";
+import { Workout, UserPreferences, WorkoutExercise } from "@/types/workout";
 import { getWorkouts, getPreferences, getCurrentWorkout } from "@/lib/storage";
 
 const emptyHistoryImage = require("../../assets/images/empty-states/empty-history.png");
@@ -185,10 +186,12 @@ function WorkoutCard({
   workout,
   units,
   index,
+  onExercisePress,
 }: {
   workout: Workout;
   units: "kg" | "lbs";
   index: number;
+  onExercisePress: (exercise: WorkoutExercise) => void;
 }) {
   const { theme } = useTheme();
   const date = new Date(workout.date);
@@ -218,10 +221,23 @@ function WorkoutCard({
       </View>
 
       {workout.exercises.map((exercise) => (
-        <View key={exercise.exerciseId} style={styles.exerciseSummary}>
-          <ThemedText type="body" style={{ fontWeight: "600" }}>
-            {exercise.exerciseName}
-          </ThemedText>
+        <Pressable
+          key={exercise.exerciseId}
+          style={({ pressed }) => [
+            styles.exerciseSummary,
+            { opacity: pressed ? 0.7 : 1 },
+          ]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onExercisePress(exercise);
+          }}
+        >
+          <View style={styles.exerciseRow}>
+            <ThemedText type="body" style={{ fontWeight: "600", flex: 1 }}>
+              {exercise.exerciseName}
+            </ThemedText>
+            <Feather name="bar-chart-2" size={16} color={theme.primary} />
+          </View>
           <View style={styles.setsSummary}>
             {exercise.sets.map((set, idx) => (
               <View
@@ -238,7 +254,7 @@ function WorkoutCard({
               </View>
             ))}
           </View>
-        </View>
+        </Pressable>
       ))}
     </Animated.View>
   );
@@ -254,6 +270,13 @@ export default function HistoryScreen() {
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState<WorkoutExercise | null>(null);
+
+  const handleExercisePress = useCallback((exercise: WorkoutExercise) => {
+    setSelectedExercise(exercise);
+    setShowHistoryModal(true);
+  }, []);
 
   const loadData = useCallback(async () => {
     const [allWorkouts, currentWorkout, prefs] = await Promise.all([
@@ -306,7 +329,12 @@ export default function HistoryScreen() {
         data={filteredWorkouts}
         keyExtractor={(item) => item.id}
         renderItem={({ item, index }) => (
-          <WorkoutCard workout={item} units={units} index={index} />
+          <WorkoutCard
+            workout={item}
+            units={units}
+            index={index}
+            onExercisePress={handleExercisePress}
+          />
         )}
         contentContainerStyle={[
           styles.listContent,
@@ -347,6 +375,19 @@ export default function HistoryScreen() {
           ) : null
         }
       />
+
+      {selectedExercise ? (
+        <ExerciseHistoryModal
+          visible={showHistoryModal}
+          exerciseId={selectedExercise.exerciseId}
+          exerciseName={selectedExercise.exerciseName}
+          units={units}
+          onClose={() => {
+            setShowHistoryModal(false);
+            setSelectedExercise(null);
+          }}
+        />
+      ) : null}
     </ThemedView>
   );
 }
@@ -407,6 +448,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: "rgba(128, 128, 128, 0.2)",
+  },
+  exerciseRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
   },
   setsSummary: {
     flexDirection: "row",
