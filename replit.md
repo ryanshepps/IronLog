@@ -71,8 +71,8 @@ IronLog is a native mobile workout tracking application designed for fast, frict
 
 ### Navigation Structure
 - **Log Tab**: Today's workout with FAB to add exercises
-- **History Tab**: Calendar view with workout history
-- **Favorites Tab**: Quick access to starred exercises
+- **History Tab**: Calendar view with workout history (tap exercise to see graph)
+- **Exercises Tab**: Full exercise database with search, filtering, and custom exercise creation
 - **Profile Tab**: Settings and stats
 
 ## Technical Details
