@@ -5,14 +5,14 @@ import { BlurView } from "expo-blur";
 import { Platform, StyleSheet } from "react-native";
 import LogStackNavigator from "@/navigation/LogStackNavigator";
 import HistoryStackNavigator from "@/navigation/HistoryStackNavigator";
-import FavoritesStackNavigator from "@/navigation/FavoritesStackNavigator";
+import ExercisesStackNavigator from "@/navigation/ExercisesStackNavigator";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 
 export type MainTabParamList = {
   LogTab: undefined;
   HistoryTab: undefined;
-  FavoritesTab: undefined;
+  ExercisesTab: undefined;
   ProfileTab: undefined;
 };
 
@@ -68,12 +68,12 @@ export default function MainTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="FavoritesTab"
-        component={FavoritesStackNavigator}
+        name="ExercisesTab"
+        component={ExercisesStackNavigator}
         options={{
-          title: "Favorites",
+          title: "Exercises",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="star" size={size} color={color} />
+            <Feather name="list" size={size} color={color} />
           ),
         }}
       />
