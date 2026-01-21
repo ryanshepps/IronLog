@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, StyleSheet, Pressable, Switch } from "react-native";
+import { View, StyleSheet, Pressable, Alert, Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,6 +10,7 @@ import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollV
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useAuth } from "@/contexts/AuthContext";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { UserPreferences, DEFAULT_PREFERENCES } from "@/types/workout";
 import { getPreferences, savePreferences, getWorkouts, getCurrentWorkout } from "@/lib/storage";
@@ -47,6 +48,7 @@ function SettingsRow({
   onPress,
   rightElement,
   showChevron = true,
+  destructive = false,
 }: {
   icon: keyof typeof Feather.glyphMap;
   label: string;
@@ -54,8 +56,11 @@ function SettingsRow({
   onPress?: () => void;
   rightElement?: React.ReactNode;
   showChevron?: boolean;
+  destructive?: boolean;
 }) {
   const { theme } = useTheme();
+  const iconBgColor = destructive ? theme.error : theme.primary;
+  const labelColor = destructive ? theme.error : theme.text;
 
   return (
     <Pressable
@@ -66,10 +71,10 @@ function SettingsRow({
         { opacity: pressed && onPress ? 0.7 : 1 },
       ]}
     >
-      <View style={[styles.iconContainer, { backgroundColor: theme.primary }]}>
+      <View style={[styles.iconContainer, { backgroundColor: iconBgColor }]}>
         <Feather name={icon} size={16} color="#FFFFFF" />
       </View>
-      <ThemedText type="body" style={styles.rowLabel}>
+      <ThemedText type="body" style={[styles.rowLabel, { color: labelColor }]}>
         {label}
       </ThemedText>
       {rightElement ? (
@@ -109,6 +114,7 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
+  const { user, logout, updateProfile } = useAuth();
 
   const [preferences, setPreferences] = useState<UserPreferences>(
     DEFAULT_PREFERENCES
@@ -125,9 +131,18 @@ export default function ProfileScreen() {
       getWorkouts(),
       getCurrentWorkout(),
     ]);
-    setPreferences(prefs);
+    
+    if (user) {
+      setPreferences(prev => ({
+        ...prev,
+        ...prefs,
+        displayName: user.displayName || "Athlete",
+        units: (user.units as "lbs" | "kg") || prefs.units,
+      }));
+    } else {
+      setPreferences(prefs);
+    }
 
-    // Include current workout in stats if it has exercises
     let allWorkouts = [...workouts];
     if (currentWorkout && currentWorkout.exercises.length > 0) {
       const existingIndex = allWorkouts.findIndex(w => w.id === currentWorkout.id);
@@ -152,9 +167,8 @@ export default function ProfileScreen() {
       totalSets,
       totalExercises,
     });
-  }, []);
+  }, [user]);
 
-  // Reload data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       loadData();
@@ -166,6 +180,34 @@ export default function ProfileScreen() {
     const newUnits = preferences.units === "lbs" ? "kg" : "lbs";
     setPreferences((prev) => ({ ...prev, units: newUnits }));
     await savePreferences({ units: newUnits });
+    
+    try {
+      await updateProfile({ units: newUnits });
+    } catch (error) {
+      console.error("Failed to sync units to server:", error);
+    }
+  };
+
+  const handleLogout = async () => {
+    const performLogout = async () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await logout();
+    };
+
+    if (Platform.OS === "web") {
+      if (window.confirm("Are you sure you want to log out?")) {
+        await performLogout();
+      }
+    } else {
+      Alert.alert(
+        "Log Out",
+        "Are you sure you want to log out?",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Log Out", style: "destructive", onPress: performLogout },
+        ]
+      );
+    }
   };
 
   return (
@@ -188,8 +230,13 @@ export default function ProfileScreen() {
             <Feather name="user" size={40} color={theme.primary} />
           </View>
           <ThemedText type="h2" style={styles.displayName}>
-            {preferences.displayName}
+            {user?.displayName || preferences.displayName}
           </ThemedText>
+          {user?.email ? (
+            <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: Spacing.xs }}>
+              {user.email}
+            </ThemedText>
+          ) : null}
         </View>
 
         <View style={styles.statsContainer}>
@@ -270,6 +317,16 @@ export default function ProfileScreen() {
               </Pressable>
             }
             showChevron={false}
+          />
+        </SettingsSection>
+
+        <SettingsSection title="ACCOUNT">
+          <SettingsRow
+            icon="log-out"
+            label="Log Out"
+            onPress={handleLogout}
+            showChevron={false}
+            destructive
           />
         </SettingsSection>
 

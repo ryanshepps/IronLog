@@ -77,11 +77,24 @@ IronLog is a native mobile workout tracking application designed for fast, frict
 
 ## Technical Details
 
+### Authentication
+- User registration and login with email/password
+- Session-based authentication using express-session
+- Protected API routes require authentication
+- Auth screens: Login and Signup with proper validation
+- Profile screen shows user info and logout option
+
 ### Data Storage
-- Uses `@react-native-async-storage/async-storage` for local persistence
-- No backend database required for MVP (offline-first approach)
+**Cloud Storage (PostgreSQL via Drizzle ORM)**
+- `users` - User accounts with email, password (hashed), displayName, units
+- `workouts` - User workout sessions with exercises and sets (JSONB)
+- `favorites` - User's favorite exercise IDs
+- `exercise_history` - Last performance records per exercise
+
+**Local Storage (AsyncStorage)**
+- Used for offline caching and current workout state
 - Data keys:
-  - `@ironlog/workouts` - Workout history
+  - `@ironlog/workouts` - Local workout cache
   - `@ironlog/favorites` - Favorite exercise IDs
   - `@ironlog/exerciseHistory` - Last performance per exercise
   - `@ironlog/preferences` - User settings
@@ -113,6 +126,15 @@ npm run server:dev  # Start Express backend (port 5000)
 - **Start Backend**: `npm run server:dev` - Express API server
 
 ## Recent Changes
+- January 21, 2026: Multi-user authentication system
+  - Added PostgreSQL database with Drizzle ORM
+  - User registration and login with email/password
+  - Session-based authentication (express-session + bcryptjs)
+  - Login and Signup screens with validation
+  - Profile screen with logout functionality
+  - Protected API routes for workouts, favorites, exercise history
+  - Database schema: users, workouts, favorites, exercise_history tables
+  
 - January 2026: Initial MVP implementation
   - 4-tab navigation (Log, History, Favorites, Profile)
   - 200+ exercise database
