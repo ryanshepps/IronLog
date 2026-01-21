@@ -5,6 +5,7 @@ import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useFocusEffect } from "@react-navigation/native";
 import Animated, { FadeIn, Layout } from "react-native-reanimated";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -13,7 +14,7 @@ import { FeelingDots } from "@/components/FeelingRating";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { Workout, UserPreferences } from "@/types/workout";
-import { getWorkouts, getPreferences } from "@/lib/storage";
+import { getWorkouts, getPreferences, getCurrentWorkout } from "@/lib/storage";
 
 const emptyHistoryImage = require("../../assets/images/empty-states/empty-history.png");
 
@@ -255,17 +256,34 @@ export default function HistoryScreen() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const loadData = useCallback(async () => {
-    const [allWorkouts, prefs] = await Promise.all([
+    const [allWorkouts, currentWorkout, prefs] = await Promise.all([
       getWorkouts(),
+      getCurrentWorkout(),
       getPreferences(),
     ]);
-    setWorkouts(allWorkouts);
+    
+    // Combine saved workouts with current workout if it has exercises
+    let combinedWorkouts = [...allWorkouts];
+    if (currentWorkout && currentWorkout.exercises.length > 0) {
+      // Check if current workout is already in the list
+      const existingIndex = combinedWorkouts.findIndex(w => w.id === currentWorkout.id);
+      if (existingIndex >= 0) {
+        combinedWorkouts[existingIndex] = currentWorkout;
+      } else {
+        combinedWorkouts.unshift(currentWorkout);
+      }
+    }
+    
+    setWorkouts(combinedWorkouts);
     setPreferences(prefs);
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  // Reload data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   const workoutDates = useMemo(() => {
     return new Set(workouts.map((w) => w.date));

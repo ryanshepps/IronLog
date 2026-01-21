@@ -1,17 +1,18 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { View, StyleSheet, Pressable, Switch } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useFocusEffect } from "@react-navigation/native";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { UserPreferences, DEFAULT_PREFERENCES } from "@/types/workout";
-import { getPreferences, savePreferences, getWorkouts } from "@/lib/storage";
+import { getPreferences, savePreferences, getWorkouts, getCurrentWorkout } from "@/lib/storage";
 
 function SettingsSection({
   title,
@@ -119,28 +120,46 @@ export default function ProfileScreen() {
   });
 
   const loadData = useCallback(async () => {
-    const [prefs, workouts] = await Promise.all([getPreferences(), getWorkouts()]);
+    const [prefs, workouts, currentWorkout] = await Promise.all([
+      getPreferences(),
+      getWorkouts(),
+      getCurrentWorkout(),
+    ]);
     setPreferences(prefs);
 
-    const totalSets = workouts.reduce(
+    // Include current workout in stats if it has exercises
+    let allWorkouts = [...workouts];
+    if (currentWorkout && currentWorkout.exercises.length > 0) {
+      const existingIndex = allWorkouts.findIndex(w => w.id === currentWorkout.id);
+      if (existingIndex >= 0) {
+        allWorkouts[existingIndex] = currentWorkout;
+      } else {
+        allWorkouts.unshift(currentWorkout);
+      }
+    }
+
+    const totalSets = allWorkouts.reduce(
       (acc, w) => acc + w.exercises.reduce((a, e) => a + e.sets.length, 0),
       0
     );
-    const totalExercises = workouts.reduce(
+    const totalExercises = allWorkouts.reduce(
       (acc, w) => acc + w.exercises.length,
       0
     );
 
     setStats({
-      totalWorkouts: workouts.length,
+      totalWorkouts: allWorkouts.length,
       totalSets,
       totalExercises,
     });
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  // Reload data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   const handleToggleUnits = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

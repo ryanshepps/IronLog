@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { View, StyleSheet, FlatList, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useFocusEffect } from "@react-navigation/native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -142,9 +143,12 @@ export default function FavoritesScreen() {
     setPreferences(prefs);
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  // Reload data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   const handleRemoveFavorite = async (exerciseId: string) => {
     await removeFavorite(exerciseId);
