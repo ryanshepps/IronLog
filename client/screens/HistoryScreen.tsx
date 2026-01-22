@@ -15,7 +15,7 @@ import { ExerciseHistoryModal } from "@/components/ExerciseHistoryModal";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { Workout, UserPreferences, WorkoutExercise } from "@/types/workout";
-import { getWorkouts, getPreferences, getCurrentWorkout } from "@/lib/storage";
+import { getWorkouts, getPreferences, getCurrentWorkout, formatDateLocal } from "@/lib/storage";
 
 const emptyHistoryImage = require("../../assets/images/empty-states/empty-history.png");
 
@@ -62,22 +62,23 @@ function Calendar({
     const firstDay = new Date(selectedYear, selectedMonth, 1);
     const lastDay = new Date(selectedYear, selectedMonth + 1, 0);
     const startPadding = firstDay.getDay();
-    const today = new Date().toISOString().split("T")[0];
+    const today = formatDateLocal(new Date());
 
     for (let i = startPadding - 1; i >= 0; i--) {
       const date = new Date(selectedYear, selectedMonth, -i);
+      const dateStr = formatDateLocal(date);
       result.push({
-        date: date.toISOString().split("T")[0],
+        date: dateStr,
         day: date.getDate(),
         isCurrentMonth: false,
         isToday: false,
-        hasWorkout: workoutDates.has(date.toISOString().split("T")[0]),
+        hasWorkout: workoutDates.has(dateStr),
       });
     }
 
     for (let i = 1; i <= lastDay.getDate(); i++) {
       const date = new Date(selectedYear, selectedMonth, i);
-      const dateStr = date.toISOString().split("T")[0];
+      const dateStr = formatDateLocal(date);
       result.push({
         date: dateStr,
         day: i,
@@ -90,12 +91,13 @@ function Calendar({
     const remaining = 42 - result.length;
     for (let i = 1; i <= remaining; i++) {
       const date = new Date(selectedYear, selectedMonth + 1, i);
+      const dateStr = formatDateLocal(date);
       result.push({
-        date: date.toISOString().split("T")[0],
+        date: dateStr,
         day: i,
         isCurrentMonth: false,
         isToday: false,
-        hasWorkout: workoutDates.has(date.toISOString().split("T")[0]),
+        hasWorkout: workoutDates.has(dateStr),
       });
     }
 
