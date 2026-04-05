@@ -1,7 +1,9 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "node:http";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcryptjs";
+import { pool } from "./db";
 import { storage } from "./storage";
 import { loginSchema, signupSchema } from "@shared/schema";
 
@@ -19,9 +21,16 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  const PgStore = connectPgSimple(session);
+
+  if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
+    throw new Error("SESSION_SECRET must be set in production");
+  }
+
   app.use(
     session({
-      secret: process.env.SESSION_SECRET || "ironlog-secret-key-change-in-production",
+      store: new PgStore({ pool, createTableIfMissing: true }),
+      secret: process.env.SESSION_SECRET || "ironlog-dev-secret",
       resave: false,
       saveUninitialized: false,
       cookie: {

@@ -27,6 +27,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/express-session": "^1.18.2",
     "bcryptjs": "^3.0.3",
+    "connect-pg-simple": "^10.0.0",
     "drizzle-orm": "^0.39.3",
     "drizzle-zod": "^0.7.0",
     "expo": "^54.0.23",
@@ -63,6 +64,7 @@
     "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
+    "@types/connect-pg-simple": "^7.0.3",
     "@types/express": "^5.0.0",
     "@types/node": "24.10.0",
     "@types/react": "~19.1.0",
