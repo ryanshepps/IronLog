@@ -1,0 +1,10 @@
+node_modules
+.git
+.expo
+server_dist
+dist
+web-build
+.DS_Store
+*.md
+.env
+.env.*
