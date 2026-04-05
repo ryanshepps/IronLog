@@ -92,37 +92,105 @@ function setupRequestLogging(app: express.Application) {
   });
 }
 
-function getAppName(): string {
+interface AssetMetadata {
+  path: string;
+  ext: string;
+}
+
+interface PlatformMetadata {
+  bundle: string;
+  assets: AssetMetadata[];
+}
+
+interface ExportMetadata {
+  version: number;
+  bundler: string;
+  fileMetadata: Record<string, PlatformMetadata>;
+}
+
+interface ExpoConfig {
+  name?: string;
+  slug?: string;
+  version?: string;
+  [key: string]: string | boolean | number | Record<string, unknown> | unknown[] | undefined;
+}
+
+const EXT_CONTENT_TYPES: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  svg: "image/svg+xml",
+  ttf: "font/ttf",
+  otf: "font/otf",
+  woff: "font/woff",
+  woff2: "font/woff2",
+};
+
+function getExpoConfig(): ExpoConfig {
   try {
     const appJsonPath = path.resolve(process.cwd(), "app.json");
     const appJsonContent = fs.readFileSync(appJsonPath, "utf-8");
-    const appJson = JSON.parse(appJsonContent);
-    return appJson.expo?.name || "App Landing Page";
+    const appJson = JSON.parse(appJsonContent) as { expo?: ExpoConfig };
+    return appJson.expo || {};
   } catch {
-    return "App Landing Page";
+    return {};
   }
 }
 
-function serveExpoManifest(platform: string, res: Response) {
-  const manifestPath = path.resolve(
-    process.cwd(),
-    "static-build",
-    platform,
-    "manifest.json",
-  );
+function getBaseUrl(req: Request): string {
+  const protocol = req.header("x-forwarded-proto") || req.protocol || "https";
+  const host = req.header("x-forwarded-host") || req.get("host");
+  return `${protocol}://${host}`;
+}
 
-  if (!fs.existsSync(manifestPath)) {
-    return res
-      .status(404)
-      .json({ error: `Manifest not found for platform: ${platform}` });
+function serveExpoManifest(platform: string, req: Request, res: Response) {
+  const metadataPath = path.resolve(process.cwd(), "static-build", "metadata.json");
+
+  if (!fs.existsSync(metadataPath)) {
+    return res.status(404).json({ error: "Build metadata not found" });
   }
+
+  const metadata: ExportMetadata = JSON.parse(fs.readFileSync(metadataPath, "utf-8"));
+  const platformData = metadata.fileMetadata[platform];
+
+  if (!platformData) {
+    return res.status(404).json({ error: `No build found for platform: ${platform}` });
+  }
+
+  const baseUrl = getBaseUrl(req);
+  const expoConfig = getExpoConfig();
+  const expoVersion = JSON.parse(
+    fs.readFileSync(path.resolve(process.cwd(), "node_modules", "expo", "package.json"), "utf-8"),
+  ).version as string;
+
+  const bundleFilename = path.basename(platformData.bundle, path.extname(platformData.bundle));
+
+  const manifest = {
+    id: bundleFilename,
+    createdAt: new Date().toISOString(),
+    runtimeVersion: `exposdk:${expoVersion}`,
+    launchAsset: {
+      key: "bundle",
+      contentType: "application/javascript",
+      url: `${baseUrl}/${platformData.bundle}`,
+    },
+    assets: platformData.assets.map((asset) => ({
+      key: path.basename(asset.path),
+      contentType: EXT_CONTENT_TYPES[asset.ext] || "application/octet-stream",
+      fileExtension: `.${asset.ext}`,
+      url: `${baseUrl}/${asset.path}`,
+    })),
+    metadata: {},
+    extra: {
+      expoClient: expoConfig,
+    },
+  };
 
   res.setHeader("expo-protocol-version", "1");
   res.setHeader("expo-sfv-version", "0");
   res.setHeader("content-type", "application/json");
-
-  const manifest = fs.readFileSync(manifestPath, "utf-8");
-  res.send(manifest);
+  res.send(JSON.stringify(manifest));
 }
 
 function serveLandingPage({
@@ -136,19 +204,12 @@ function serveLandingPage({
   landingPageTemplate: string;
   appName: string;
 }) {
-  const forwardedProto = req.header("x-forwarded-proto");
-  const protocol = forwardedProto || req.protocol || "https";
-  const forwardedHost = req.header("x-forwarded-host");
-  const host = forwardedHost || req.get("host");
-  const baseUrl = `${protocol}://${host}`;
-  const expsUrl = `${host}`;
-
-  log(`baseUrl`, baseUrl);
-  log(`expsUrl`, expsUrl);
+  const baseUrl = getBaseUrl(req);
+  const host = req.header("x-forwarded-host") || req.get("host");
 
   const html = landingPageTemplate
     .replace(/BASE_URL_PLACEHOLDER/g, baseUrl)
-    .replace(/EXPS_URL_PLACEHOLDER/g, expsUrl)
+    .replace(/EXPS_URL_PLACEHOLDER/g, host || "")
     .replace(/APP_NAME_PLACEHOLDER/g, appName);
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
@@ -163,9 +224,8 @@ function configureExpoAndLanding(app: express.Application) {
     "landing-page.html",
   );
   const landingPageTemplate = fs.readFileSync(templatePath, "utf-8");
-  const appName = getAppName();
-
-  log("Serving static Expo files with dynamic manifest routing");
+  const expoConfig = getExpoConfig();
+  const appName = expoConfig.name || "App Landing Page";
 
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.path.startsWith("/api")) {
@@ -178,7 +238,7 @@ function configureExpoAndLanding(app: express.Application) {
 
     const platform = req.header("expo-platform");
     if (platform && (platform === "ios" || platform === "android")) {
-      return serveExpoManifest(platform, res);
+      return serveExpoManifest(platform, req, res);
     }
 
     if (req.path === "/") {
@@ -195,8 +255,6 @@ function configureExpoAndLanding(app: express.Application) {
 
   app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
   app.use(express.static(path.resolve(process.cwd(), "static-build")));
-
-  log("Expo routing: Checking expo-platform header on / and /manifest");
 }
 
 function setupErrorHandler(app: express.Application) {
