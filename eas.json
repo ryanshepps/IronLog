@@ -1,0 +1,21 @@
+{
+  "build": {
+    "production": {
+      "ios": {
+        "buildConfiguration": "Release",
+        "image": "latest"
+      },
+      "env": {
+        "EXPO_PUBLIC_DOMAIN": "ironlog.lastingsoftware.ca"
+      },
+      "autoIncrement": true
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "YOUR_ASC_APP_ID"
+      }
+    }
+  }
+}
