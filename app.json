@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ironlog.app"
+      "bundleIdentifier": "ca.lastingsoftware.ironlog"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +21,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.ironlog.app"
+      "package": "ca.lastingsoftware.ironlog"
     },
     "web": {
       "output": "single",
