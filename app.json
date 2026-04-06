@@ -44,6 +44,12 @@
     ],
     "experiments": {
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "373666c3-b249-4bca-bb2f-6cd01a5b9d3a"
+      }
+    },
+    "owner": "snowsuit"
   }
 }
