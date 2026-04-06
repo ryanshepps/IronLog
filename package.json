@@ -1,5 +1,5 @@
 {
-  "name": "my-app",
+  "name": "ironlog",
   "main": "client/index.js",
   "version": "1.0.0",
   "scripts": {
