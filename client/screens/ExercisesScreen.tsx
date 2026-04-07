@@ -265,7 +265,7 @@ export default function ExercisesScreen() {
   );
 
   const allExercises = useMemo(() => {
-    return [...EXERCISES, ...customExercises];
+    return [...customExercises, ...EXERCISES];
   }, [customExercises]);
 
   const filteredExercises = useMemo(() => {

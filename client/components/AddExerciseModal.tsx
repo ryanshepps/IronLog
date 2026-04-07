@@ -138,7 +138,7 @@ export function AddExerciseModal({
   }, [visible]);
 
   useEffect(() => {
-    const allExercises = [...EXERCISES, ...customExercises];
+    const allExercises = [...customExercises, ...EXERCISES];
     if (showFavoritesOnly) {
       const favoriteExercises = allExercises.filter((e) =>
         favorites.includes(e.id)
