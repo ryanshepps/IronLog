@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { View, StyleSheet, FlatList, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -19,7 +19,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { Exercise, ExerciseHistory, UserPreferences } from "@/types/workout";
-import { EXERCISES, getExerciseById } from "@/data/exercises";
+import { useExercises } from "@/hooks/useExercises";
 import {
   getFavorites,
   removeFavorite,
@@ -126,6 +126,7 @@ export default function FavoritesScreen() {
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
 
+  const { data: allExercises = [] } = useExercises();
   const [favorites, setFavorites] = useState<string[]>([]);
   const [exerciseHistory, setExerciseHistory] = useState<
     Record<string, ExerciseHistory>
@@ -143,7 +144,6 @@ export default function FavoritesScreen() {
     setPreferences(prefs);
   }, []);
 
-  // Reload data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       loadData();
@@ -155,8 +155,16 @@ export default function FavoritesScreen() {
     setFavorites((prev) => prev.filter((id) => id !== exerciseId));
   };
 
+  const exerciseMap = useMemo(() => {
+    const map = new Map<string, Exercise>();
+    for (const e of allExercises as Exercise[]) {
+      map.set(e.id, e);
+    }
+    return map;
+  }, [allExercises]);
+
   const favoriteExercises = favorites
-    .map((id) => getExerciseById(id))
+    .map((id) => exerciseMap.get(id))
     .filter((e): e is Exercise => e !== undefined);
 
   const units = preferences?.units || "lbs";

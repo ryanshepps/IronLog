@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   StyleSheet,
@@ -23,8 +23,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { Exercise } from "@/types/workout";
-import { searchExercises, EXERCISES } from "@/data/exercises";
-import { getCustomExercises, saveCustomExercise } from "@/lib/storage";
+import { useExercises, useCreateExercise } from "@/hooks/useExercises";
 
 interface AddExerciseModalProps {
   visible: boolean;
@@ -120,10 +119,10 @@ export function AddExerciseModal({
 }: AddExerciseModalProps) {
   const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const { data: allExercises = [] } = useExercises();
+  const createExercise = useCreateExercise();
   const [searchQuery, setSearchQuery] = useState("");
-  const [results, setResults] = useState<Exercise[]>([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newExerciseName, setNewExerciseName] = useState("");
   const [newExerciseCategory, setNewExerciseCategory] = useState("Custom");
@@ -133,49 +132,49 @@ export function AddExerciseModal({
       setSearchQuery("");
       setShowFavoritesOnly(false);
       setShowCreateForm(false);
-      getCustomExercises().then(setCustomExercises);
     }
   }, [visible]);
 
-  useEffect(() => {
-    const allExercises = [...customExercises, ...EXERCISES];
+  const results = useMemo(() => {
+    const exercises = allExercises as Exercise[];
     if (showFavoritesOnly) {
-      const favoriteExercises = allExercises.filter((e) =>
+      const favoriteExercises = exercises.filter((e) =>
         favorites.includes(e.id)
       );
-      setResults(
-        searchQuery
-          ? favoriteExercises.filter((e) =>
-              e.name.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-          : favoriteExercises
-      );
+      return searchQuery
+        ? favoriteExercises.filter((e) =>
+            e.name.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        : favoriteExercises;
     } else if (searchQuery.trim()) {
       const lowerQuery = searchQuery.toLowerCase();
-      setResults(
-        allExercises
-          .filter(
-            (e) =>
-              e.name.toLowerCase().includes(lowerQuery) ||
-              e.category.toLowerCase().includes(lowerQuery) ||
-              e.muscleGroups.some((mg) => mg.toLowerCase().includes(lowerQuery))
-          )
-          .slice(0, 50)
-      );
+      return exercises
+        .filter(
+          (e) =>
+            e.name.toLowerCase().includes(lowerQuery) ||
+            e.category.toLowerCase().includes(lowerQuery) ||
+            (e.muscleGroups as string[]).some((mg) => mg.toLowerCase().includes(lowerQuery))
+        )
+        .slice(0, 50);
     } else {
-      setResults(allExercises.slice(0, 20));
+      return exercises.slice(0, 20);
     }
-  }, [searchQuery, favorites, showFavoritesOnly, customExercises]);
+  }, [allExercises, searchQuery, favorites, showFavoritesOnly]);
 
   const handleCreateExercise = async () => {
     if (!newExerciseName.trim()) return;
-    const exercise = await saveCustomExercise(newExerciseName.trim(), newExerciseCategory);
-    setCustomExercises((prev) => [...prev, exercise]);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setShowCreateForm(false);
-    setNewExerciseName("");
-    setNewExerciseCategory("Custom");
-    onSelectExercise(exercise);
+    createExercise.mutate(
+      { name: newExerciseName.trim(), category: newExerciseCategory, muscleGroups: [] },
+      {
+        onSuccess: (exercise) => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          setShowCreateForm(false);
+          setNewExerciseName("");
+          setNewExerciseCategory("Custom");
+          onSelectExercise(exercise as Exercise);
+        },
+      }
+    );
   };
 
   const sortedResults = [...results].sort((a, b) => {

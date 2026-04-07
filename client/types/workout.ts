@@ -1,8 +1,10 @@
 export interface Exercise {
   id: string;
+  userId: string | null;
   name: string;
   category: string;
   muscleGroups: string[];
+  createdAt: string | null;
 }
 
 export interface WorkoutSet {

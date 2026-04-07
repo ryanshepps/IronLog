@@ -24,8 +24,8 @@ import { ExerciseHistoryModal } from "@/components/ExerciseHistoryModal";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { Exercise, ExerciseHistory, UserPreferences } from "@/types/workout";
-import { EXERCISES, getExerciseById } from "@/data/exercises";
-import { getAllExerciseHistory, getPreferences, getCustomExercises, saveCustomExercise, deleteCustomExercise } from "@/lib/storage";
+import { useExercises, useCreateExercise, useDeleteExercise } from "@/hooks/useExercises";
+import { getAllExerciseHistory, getPreferences } from "@/lib/storage";
 
 interface ExerciseWithHistory extends Exercise {
   history?: ExerciseHistory;
@@ -59,7 +59,7 @@ function ExerciseItem({
   index: number;
 }) {
   const { theme } = useTheme();
-  const isCustom = exercise.id.startsWith("custom-");
+  const isCustom = exercise.userId !== null;
   const swipeableRef = useRef<Swipeable>(null);
 
   const formatDate = (timestamp: number) => {
@@ -275,9 +275,12 @@ export default function ExercisesScreen() {
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
 
+  const { data: allExercises = [] } = useExercises();
+  const createExercise = useCreateExercise();
+  const deleteExerciseMutation = useDeleteExercise();
+
   const [exerciseHistory, setExerciseHistory] = useState<Record<string, ExerciseHistory>>({});
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
-  const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -285,14 +288,12 @@ export default function ExercisesScreen() {
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
 
   const loadData = useCallback(async () => {
-    const [history, prefs, custom] = await Promise.all([
+    const [history, prefs] = await Promise.all([
       getAllExerciseHistory(),
       getPreferences(),
-      getCustomExercises(),
     ]);
     setExerciseHistory(history);
     setPreferences(prefs);
-    setCustomExercises(custom);
   }, []);
 
   useFocusEffect(
@@ -301,15 +302,15 @@ export default function ExercisesScreen() {
     }, [loadData])
   );
 
-  const allExercises = useMemo(() => {
-    return [...customExercises, ...EXERCISES];
-  }, [customExercises]);
-
   const filteredExercises = useMemo(() => {
-    let exercises = allExercises;
+    let exercises = allExercises as Exercise[];
 
     if (selectedCategory !== "All") {
-      exercises = exercises.filter((e) => e.category === selectedCategory);
+      if (selectedCategory === "Custom") {
+        exercises = exercises.filter((e) => e.userId !== null);
+      } else {
+        exercises = exercises.filter((e) => e.category === selectedCategory);
+      }
     }
 
     if (searchQuery.trim()) {
@@ -325,8 +326,7 @@ export default function ExercisesScreen() {
   }, [allExercises, selectedCategory, searchQuery]);
 
   const handleAddCustomExercise = async (name: string, category: string) => {
-    const newExercise = await saveCustomExercise(name, category);
-    setCustomExercises((prev) => [...prev, newExercise]);
+    createExercise.mutate({ name, category, muscleGroups: [] });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
@@ -344,9 +344,8 @@ export default function ExercisesScreen() {
         {
           text: "Delete",
           style: "destructive",
-          onPress: async () => {
-            await deleteCustomExercise(exercise.id);
-            setCustomExercises((prev) => prev.filter((e) => e.id !== exercise.id));
+          onPress: () => {
+            deleteExerciseMutation.mutate(exercise.id);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           },
         },
