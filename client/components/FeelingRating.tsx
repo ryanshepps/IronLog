@@ -50,8 +50,8 @@ function FeelingButton({
     scale.value = withSpring(1);
   };
 
-  const buttonSize = size === "large" ? 44 : 28;
   const fontSize = size === "large" ? 17 : 13;
+  const aspectRatio = 1;
 
   return (
     <AnimatedPressable
@@ -64,9 +64,8 @@ function FeelingButton({
       style={[
         styles.button,
         {
-          width: buttonSize,
-          height: buttonSize,
-          borderRadius: buttonSize / 2,
+          aspectRatio,
+          borderRadius: 999,
           backgroundColor: isSelected ? getColor() : theme.backgroundSecondary,
           borderWidth: isSelected ? 0 : 1,
           borderColor: theme.border,
@@ -154,10 +153,11 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    gap: 4,
     alignItems: "center",
   },
   button: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
