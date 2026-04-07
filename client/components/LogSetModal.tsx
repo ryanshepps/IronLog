@@ -160,7 +160,7 @@ export function LogSetModal({
                         {index + 1}.
                       </ThemedText>
                       <ThemedText type="body">
-                        {set.weight}{units} x {set.reps}
+                        {set.weight}{units} x {set.reps} @ {set.feeling}/10
                       </ThemedText>
                       <Feather name="x" size={14} color={theme.textSecondary} style={{ marginLeft: Spacing.xs }} />
                     </Animated.View>
