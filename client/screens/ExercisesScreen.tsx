@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -17,6 +17,7 @@ import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useFocusEffect } from "@react-navigation/native";
 import Animated, { FadeIn, Layout } from "react-native-reanimated";
+import { Swipeable } from "react-native-gesture-handler";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { ExerciseHistoryModal } from "@/components/ExerciseHistoryModal";
@@ -47,18 +48,19 @@ function ExerciseItem({
   history,
   units,
   onPress,
-  onLongPress,
+  onDelete,
   index,
 }: {
   exercise: Exercise;
   history?: ExerciseHistory;
   units: "kg" | "lbs";
   onPress: () => void;
-  onLongPress?: () => void;
+  onDelete?: () => void;
   index: number;
 }) {
   const { theme } = useTheme();
   const isCustom = exercise.id.startsWith("custom-");
+  const swipeableRef = useRef<Swipeable>(null);
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -73,50 +75,77 @@ function ExerciseItem({
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
+  const renderRightActions = () => (
+    <Pressable
+      onPress={() => {
+        swipeableRef.current?.close();
+        onDelete?.();
+      }}
+      style={[styles.deleteAction, { backgroundColor: theme.error }]}
+    >
+      <Feather name="trash-2" size={20} color="#FFFFFF" />
+      <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+        Delete
+      </ThemedText>
+    </Pressable>
+  );
+
+  const content = (
+    <Pressable
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        onPress();
+      }}
+      onLongPress={isCustom ? () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        onDelete?.();
+      } : undefined}
+      style={({ pressed }) => [
+        styles.exerciseItem,
+        { backgroundColor: theme.backgroundSecondary, opacity: pressed ? 0.7 : 1 },
+      ]}
+    >
+      <View style={styles.exerciseInfo}>
+        <ThemedText type="body" style={{ fontWeight: "600" }}>
+          {exercise.name}
+        </ThemedText>
+        <ThemedText type="caption" style={{ color: theme.textSecondary }}>
+          {exercise.category}
+          {history
+            ? ` • Last: ${history.lastWeight}${units} x ${history.lastReps} • ${formatDate(history.lastPerformed)}`
+            : ""}
+        </ThemedText>
+        {history?.personalRecord ? (
+          <View style={styles.prBadge}>
+            <Feather name="award" size={12} color={theme.warning} />
+            <ThemedText
+              type="caption"
+              style={{ color: theme.warning, marginLeft: 4 }}
+            >
+              PR: {history.personalRecord}
+              {units}
+            </ThemedText>
+          </View>
+        ) : null}
+      </View>
+      <Feather name="bar-chart-2" size={20} color={theme.primary} />
+    </Pressable>
+  );
+
   return (
     <Animated.View
       entering={FadeIn.delay(Math.min(index, 10) * 30).duration(200)}
       layout={Layout.springify()}
     >
-      <Pressable
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          onPress();
-        }}
-        onLongPress={isCustom ? () => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          onLongPress?.();
-        } : undefined}
-        style={({ pressed }) => [
-          styles.exerciseItem,
-          { backgroundColor: theme.backgroundSecondary, opacity: pressed ? 0.7 : 1 },
-        ]}
-      >
-        <View style={styles.exerciseInfo}>
-          <ThemedText type="body" style={{ fontWeight: "600" }}>
-            {exercise.name}
-          </ThemedText>
-          <ThemedText type="caption" style={{ color: theme.textSecondary }}>
-            {exercise.category}
-            {history
-              ? ` • Last: ${history.lastWeight}${units} x ${history.lastReps} • ${formatDate(history.lastPerformed)}`
-              : ""}
-          </ThemedText>
-          {history?.personalRecord ? (
-            <View style={styles.prBadge}>
-              <Feather name="award" size={12} color={theme.warning} />
-              <ThemedText
-                type="caption"
-                style={{ color: theme.warning, marginLeft: 4 }}
-              >
-                PR: {history.personalRecord}
-                {units}
-              </ThemedText>
-            </View>
-          ) : null}
-        </View>
-        <Feather name="bar-chart-2" size={20} color={theme.primary} />
-      </Pressable>
+      {isCustom ? (
+        <Swipeable
+          ref={swipeableRef}
+          renderRightActions={renderRightActions}
+          overshootRight={false}
+        >
+          {content}
+        </Swipeable>
+      ) : content}
     </Animated.View>
   );
 }
@@ -338,7 +367,7 @@ export default function ExercisesScreen() {
             history={exerciseHistory[item.id]}
             units={units}
             onPress={() => handleExercisePress(item)}
-            onLongPress={() => handleDeleteExercise(item)}
+            onDelete={() => handleDeleteExercise(item)}
             index={index}
           />
         )}
@@ -498,6 +527,14 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
+  },
+  deleteAction: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 80,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.sm,
+    gap: Spacing.xs,
   },
   exerciseItem: {
     flexDirection: "row",
