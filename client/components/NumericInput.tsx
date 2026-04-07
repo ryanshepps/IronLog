@@ -69,7 +69,7 @@ export function NumericInput({
             style={[styles.input, { color: theme.text }]}
             value={value.toString()}
             onChangeText={handleTextChange}
-            keyboardType="numeric"
+            keyboardType="decimal-pad"
             selectTextOnFocus
           />
           {unit ? (
