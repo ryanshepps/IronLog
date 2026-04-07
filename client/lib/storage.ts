@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
+  Exercise,
   Workout,
   WorkoutSet,
   ExerciseHistory,
@@ -20,6 +21,7 @@ const KEYS = {
   EXERCISE_HISTORY: "@ironlog/exerciseHistory",
   PREFERENCES: "@ironlog/preferences",
   CURRENT_WORKOUT: "@ironlog/currentWorkout",
+  CUSTOM_EXERCISES: "@ironlog/customExercises",
 };
 
 export async function getWorkouts(): Promise<Workout[]> {
@@ -235,6 +237,29 @@ export interface ExercisePerformanceEntry {
   totalVolume: number;
   sets: SetDetail[];
   bestWeight: number;
+}
+
+export async function getCustomExercises(): Promise<Exercise[]> {
+  try {
+    const data = await AsyncStorage.getItem(KEYS.CUSTOM_EXERCISES);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error("Error getting custom exercises:", error);
+    return [];
+  }
+}
+
+export async function saveCustomExercise(name: string, category: string): Promise<Exercise> {
+  const exercises = await getCustomExercises();
+  const newExercise: Exercise = {
+    id: `custom-${Date.now()}`,
+    name,
+    category,
+    muscleGroups: [],
+  };
+  const updated = [...exercises, newExercise];
+  await AsyncStorage.setItem(KEYS.CUSTOM_EXERCISES, JSON.stringify(updated));
+  return newExercise;
 }
 
 export async function getExercisePerformanceHistory(

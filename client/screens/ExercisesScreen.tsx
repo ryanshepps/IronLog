@@ -23,10 +23,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { Exercise, ExerciseHistory, UserPreferences } from "@/types/workout";
 import { EXERCISES, getExerciseById } from "@/data/exercises";
-import { getAllExerciseHistory, getPreferences } from "@/lib/storage";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const CUSTOM_EXERCISES_KEY = "@ironlog/customExercises";
+import { getAllExerciseHistory, getPreferences, getCustomExercises, saveCustomExercise } from "@/lib/storage";
 
 interface ExerciseWithHistory extends Exercise {
   history?: ExerciseHistory;
@@ -251,16 +248,14 @@ export default function ExercisesScreen() {
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
 
   const loadData = useCallback(async () => {
-    const [history, prefs, customData] = await Promise.all([
+    const [history, prefs, custom] = await Promise.all([
       getAllExerciseHistory(),
       getPreferences(),
-      AsyncStorage.getItem(CUSTOM_EXERCISES_KEY),
+      getCustomExercises(),
     ]);
     setExerciseHistory(history);
     setPreferences(prefs);
-    if (customData) {
-      setCustomExercises(JSON.parse(customData));
-    }
+    setCustomExercises(custom);
   }, []);
 
   useFocusEffect(
@@ -293,16 +288,8 @@ export default function ExercisesScreen() {
   }, [allExercises, selectedCategory, searchQuery]);
 
   const handleAddCustomExercise = async (name: string, category: string) => {
-    const newExercise: Exercise = {
-      id: `custom-${Date.now()}`,
-      name,
-      category,
-      muscleGroups: [],
-    };
-
-    const updated = [...customExercises, newExercise];
-    setCustomExercises(updated);
-    await AsyncStorage.setItem(CUSTOM_EXERCISES_KEY, JSON.stringify(updated));
+    const newExercise = await saveCustomExercise(name, category);
+    setCustomExercises((prev) => [...prev, newExercise]);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 

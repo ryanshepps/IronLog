@@ -6,6 +6,8 @@ import {
   TextInput,
   FlatList,
   Pressable,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -22,6 +24,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { Exercise } from "@/types/workout";
 import { searchExercises, EXERCISES } from "@/data/exercises";
+import { getCustomExercises, saveCustomExercise } from "@/lib/storage";
 
 interface AddExerciseModalProps {
   visible: boolean;
@@ -120,17 +123,24 @@ export function AddExerciseModal({
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState<Exercise[]>([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newExerciseName, setNewExerciseName] = useState("");
+  const [newExerciseCategory, setNewExerciseCategory] = useState("Custom");
 
   useEffect(() => {
     if (visible) {
       setSearchQuery("");
       setShowFavoritesOnly(false);
+      setShowCreateForm(false);
+      getCustomExercises().then(setCustomExercises);
     }
   }, [visible]);
 
   useEffect(() => {
+    const allExercises = [...EXERCISES, ...customExercises];
     if (showFavoritesOnly) {
-      const favoriteExercises = EXERCISES.filter((e) =>
+      const favoriteExercises = allExercises.filter((e) =>
         favorites.includes(e.id)
       );
       setResults(
@@ -140,10 +150,33 @@ export function AddExerciseModal({
             )
           : favoriteExercises
       );
+    } else if (searchQuery.trim()) {
+      const lowerQuery = searchQuery.toLowerCase();
+      setResults(
+        allExercises
+          .filter(
+            (e) =>
+              e.name.toLowerCase().includes(lowerQuery) ||
+              e.category.toLowerCase().includes(lowerQuery) ||
+              e.muscleGroups.some((mg) => mg.toLowerCase().includes(lowerQuery))
+          )
+          .slice(0, 50)
+      );
     } else {
-      setResults(searchExercises(searchQuery));
+      setResults(allExercises.slice(0, 20));
     }
-  }, [searchQuery, favorites, showFavoritesOnly]);
+  }, [searchQuery, favorites, showFavoritesOnly, customExercises]);
+
+  const handleCreateExercise = async () => {
+    if (!newExerciseName.trim()) return;
+    const exercise = await saveCustomExercise(newExerciseName.trim(), newExerciseCategory);
+    setCustomExercises((prev) => [...prev, exercise]);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setShowCreateForm(false);
+    setNewExerciseName("");
+    setNewExerciseCategory("Custom");
+    onSelectExercise(exercise);
+  };
 
   const sortedResults = [...results].sort((a, b) => {
     const aIsFavorite = favorites.includes(a.id);
@@ -207,38 +240,150 @@ export function AddExerciseModal({
           ) : null}
         </View>
 
-        <FlatList
-          data={sortedResults}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item, index }) => (
-            <ExerciseListItem
-              exercise={item}
-              isFavorite={favorites.includes(item.id)}
-              lastPerformance={exerciseHistory[item.id]}
-              onSelect={() => onSelectExercise(item)}
-              onToggleFavorite={() => onToggleFavorite(item.id)}
-              index={index}
-            />
-          )}
-          contentContainerStyle={[
-            styles.listContent,
-            { paddingBottom: insets.bottom + Spacing.xl },
-          ]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <ThemedText
-                type="body"
-                style={{ color: theme.textSecondary, textAlign: "center" }}
+        {showCreateForm ? (
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.createFormContainer}
+          >
+            <View
+              style={[
+                styles.createForm,
+                { backgroundColor: theme.backgroundDefault },
+              ]}
+            >
+              <View style={styles.createFormHeader}>
+                <ThemedText type="h4">Create Exercise</ThemedText>
+                <Pressable
+                  onPress={() => {
+                    setShowCreateForm(false);
+                    setNewExerciseName("");
+                    setNewExerciseCategory("Custom");
+                  }}
+                  hitSlop={12}
+                >
+                  <Feather name="x" size={22} color={theme.textSecondary} />
+                </Pressable>
+              </View>
+
+              <TextInput
+                style={[
+                  styles.createInput,
+                  {
+                    backgroundColor: theme.backgroundSecondary,
+                    color: theme.text,
+                    borderColor: theme.border,
+                  },
+                ]}
+                placeholder="Exercise name"
+                placeholderTextColor={theme.textSecondary}
+                value={newExerciseName}
+                onChangeText={setNewExerciseName}
+                autoFocus
+              />
+
+              <View style={styles.categoryPicker}>
+                {["Chest", "Back", "Shoulders", "Arms", "Legs", "Core", "Cardio", "Custom"].map(
+                  (cat) => (
+                    <Pressable
+                      key={cat}
+                      onPress={() => setNewExerciseCategory(cat)}
+                      style={[
+                        styles.categoryOption,
+                        {
+                          backgroundColor:
+                            newExerciseCategory === cat
+                              ? theme.primary
+                              : theme.backgroundSecondary,
+                        },
+                      ]}
+                    >
+                      <ThemedText
+                        type="small"
+                        style={{
+                          color:
+                            newExerciseCategory === cat
+                              ? "#FFFFFF"
+                              : theme.text,
+                          fontWeight: "600",
+                        }}
+                      >
+                        {cat}
+                      </ThemedText>
+                    </Pressable>
+                  )
+                )}
+              </View>
+
+              <Pressable
+                style={[
+                  styles.createButton,
+                  { backgroundColor: theme.primary },
+                  !newExerciseName.trim() && { opacity: 0.5 },
+                ]}
+                onPress={handleCreateExercise}
+                disabled={!newExerciseName.trim()}
               >
-                {showFavoritesOnly
-                  ? "No favorite exercises yet"
-                  : "No exercises found"}
-              </ThemedText>
+                <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+                  Create & Add
+                </ThemedText>
+              </Pressable>
             </View>
-          }
-        />
+          </KeyboardAvoidingView>
+        ) : (
+          <FlatList
+            data={sortedResults}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item, index }) => (
+              <ExerciseListItem
+                exercise={item}
+                isFavorite={favorites.includes(item.id)}
+                lastPerformance={exerciseHistory[item.id]}
+                onSelect={() => onSelectExercise(item)}
+                onToggleFavorite={() => onToggleFavorite(item.id)}
+                index={index}
+              />
+            )}
+            contentContainerStyle={[
+              styles.listContent,
+              { paddingBottom: insets.bottom + Spacing.xl },
+            ]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            ListFooterComponent={
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setNewExerciseName(searchQuery);
+                  setShowCreateForm(true);
+                }}
+                style={[
+                  styles.createExerciseButton,
+                  { backgroundColor: theme.backgroundSecondary },
+                ]}
+              >
+                <Feather name="plus" size={20} color={theme.primary} />
+                <ThemedText
+                  type="body"
+                  style={{ color: theme.primary, fontWeight: "600" }}
+                >
+                  Create New Exercise
+                </ThemedText>
+              </Pressable>
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <ThemedText
+                  type="body"
+                  style={{ color: theme.textSecondary, textAlign: "center" }}
+                >
+                  {showFavoritesOnly
+                    ? "No favorite exercises yet"
+                    : "No exercises found"}
+                </ThemedText>
+              </View>
+            }
+          />
+        )}
       </ThemedView>
     </Modal>
   );
@@ -292,5 +437,52 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     paddingVertical: Spacing["4xl"],
+  },
+  createExerciseButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.sm,
+  },
+  createFormContainer: {
+    flex: 1,
+    paddingHorizontal: Spacing.lg,
+  },
+  createForm: {
+    paddingTop: Spacing.md,
+  },
+  createFormHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.lg,
+  },
+  createInput: {
+    height: Spacing.inputHeight,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.lg,
+    ...Typography.body,
+    borderWidth: 1,
+    marginBottom: Spacing.lg,
+  },
+  categoryPicker: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  categoryOption: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+  },
+  createButton: {
+    height: Spacing.buttonHeight,
+    borderRadius: BorderRadius.sm,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
