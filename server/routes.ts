@@ -5,7 +5,7 @@ import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcryptjs";
 import { pool } from "./db";
 import { storage } from "./storage";
-import { loginSchema, signupSchema } from "@shared/schema";
+import { loginSchema, signupSchema, insertExerciseSchema } from "@shared/schema";
 
 declare module "express-session" {
   interface SessionData {
@@ -287,6 +287,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/exercises", requireAuth, async (req, res) => {
+    try {
+      const exercises = await storage.getExercises(req.session.userId!);
+      res.json(exercises);
+    } catch (error) {
+      console.error("Get exercises error:", error);
+      res.status(500).json({ error: "Failed to get exercises" });
+    }
+  });
+
+  app.post("/api/exercises", requireAuth, async (req, res) => {
+    try {
+      const result = insertExerciseSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid input", details: result.error.flatten() });
+      }
+      const exercise = await storage.createExercise(req.session.userId!, result.data);
+      res.json(exercise);
+    } catch (error) {
+      console.error("Create exercise error:", error);
+      res.status(500).json({ error: "Failed to create exercise" });
+    }
+  });
+
+  app.delete("/api/exercises/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteExercise(req.params.id, req.session.userId!);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete exercise error:", error);
+      res.status(500).json({ error: "Failed to delete exercise" });
+    }
+  });
+
+  app.patch("/api/exercises/:id", requireAuth, async (req, res) => {
+    try {
+      const { name } = req.body;
+      if (!name || typeof name !== "string") {
+        return res.status(400).json({ error: "Name is required" });
+      }
+      const exercise = await storage.updateExerciseName(req.params.id, req.session.userId!, name);
+      if (!exercise) {
+        return res.status(404).json({ error: "Exercise not found" });
+      }
+      res.json(exercise);
+    } catch (error) {
+      console.error("Update exercise error:", error);
+      res.status(500).json({ error: "Failed to update exercise" });
+    }
+  });
+
   app.post("/api/sync", requireAuth, async (req, res) => {
     try {
       const { workouts: clientWorkouts, favorites: clientFavorites } = req.body;
@@ -311,8 +362,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const workouts = await storage.getWorkouts(userId);
       const favorites = await storage.getFavorites(userId);
       const exerciseHistory = await storage.getAllExerciseHistory(userId);
+      const exercises = await storage.getExercises(userId);
 
-      res.json({ workouts, favorites, exerciseHistory });
+      res.json({ workouts, favorites, exerciseHistory, exercises });
     } catch (error) {
       console.error("Sync error:", error);
       res.status(500).json({ error: "Failed to sync data" });
