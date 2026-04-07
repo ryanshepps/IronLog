@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -14,9 +14,26 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const exercises = pgTable("exercises", {
+  id: text("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  category: text("category").notNull(),
+  muscleGroups: jsonb("muscle_groups").notNull().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const exercisesRelations = relations(exercises, ({ one }) => ({
+  user: one(users, {
+    fields: [exercises.userId],
+    references: [users.id],
+  }),
+}));
+
 export const usersRelations = relations(users, ({ many }) => ({
   workouts: many(workouts),
   favorites: many(favorites),
+  exercises: many(exercises),
 }));
 
 export const workouts = pgTable("workouts", {
@@ -97,9 +114,17 @@ export const signupSchema = z.object({
   displayName: z.string().optional(),
 });
 
+export const insertExerciseSchema = createInsertSchema(exercises).pick({
+  name: true,
+  category: true,
+  muscleGroups: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Workout = typeof workouts.$inferSelect;
 export type InsertWorkout = typeof workouts.$inferInsert;
 export type Favorite = typeof favorites.$inferSelect;
 export type ExerciseHistoryRecord = typeof exerciseHistory.$inferSelect;
+export type ExerciseRecord = typeof exercises.$inferSelect;
+export type InsertExercise = z.infer<typeof insertExerciseSchema>;
