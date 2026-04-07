@@ -262,6 +262,12 @@ export async function saveCustomExercise(name: string, category: string): Promis
   return newExercise;
 }
 
+export async function deleteCustomExercise(exerciseId: string): Promise<void> {
+  const exercises = await getCustomExercises();
+  const updated = exercises.filter((e) => e.id !== exerciseId);
+  await AsyncStorage.setItem(KEYS.CUSTOM_EXERCISES, JSON.stringify(updated));
+}
+
 export async function getExercisePerformanceHistory(
   exerciseId: string
 ): Promise<ExercisePerformanceEntry[]> {

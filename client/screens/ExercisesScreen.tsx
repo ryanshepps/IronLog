@@ -8,6 +8,7 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -23,7 +24,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { Exercise, ExerciseHistory, UserPreferences } from "@/types/workout";
 import { EXERCISES, getExerciseById } from "@/data/exercises";
-import { getAllExerciseHistory, getPreferences, getCustomExercises, saveCustomExercise } from "@/lib/storage";
+import { getAllExerciseHistory, getPreferences, getCustomExercises, saveCustomExercise, deleteCustomExercise } from "@/lib/storage";
 
 interface ExerciseWithHistory extends Exercise {
   history?: ExerciseHistory;
@@ -46,15 +47,18 @@ function ExerciseItem({
   history,
   units,
   onPress,
+  onLongPress,
   index,
 }: {
   exercise: Exercise;
   history?: ExerciseHistory;
   units: "kg" | "lbs";
   onPress: () => void;
+  onLongPress?: () => void;
   index: number;
 }) {
   const { theme } = useTheme();
+  const isCustom = exercise.id.startsWith("custom-");
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -79,6 +83,10 @@ function ExerciseItem({
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           onPress();
         }}
+        onLongPress={isCustom ? () => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          onLongPress?.();
+        } : undefined}
         style={({ pressed }) => [
           styles.exerciseItem,
           { backgroundColor: theme.backgroundSecondary, opacity: pressed ? 0.7 : 1 },
@@ -298,6 +306,25 @@ export default function ExercisesScreen() {
     setShowHistoryModal(true);
   };
 
+  const handleDeleteExercise = (exercise: Exercise) => {
+    Alert.alert(
+      "Delete Exercise",
+      `Are you sure you want to delete "${exercise.name}"? This cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            await deleteCustomExercise(exercise.id);
+            setCustomExercises((prev) => prev.filter((e) => e.id !== exercise.id));
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          },
+        },
+      ]
+    );
+  };
+
   const units = preferences?.units || "lbs";
 
   return (
@@ -311,6 +338,7 @@ export default function ExercisesScreen() {
             history={exerciseHistory[item.id]}
             units={units}
             onPress={() => handleExercisePress(item)}
+            onLongPress={() => handleDeleteExercise(item)}
             index={index}
           />
         )}
