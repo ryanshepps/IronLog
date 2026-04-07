@@ -1,17 +1,20 @@
-import { 
-  users, 
-  workouts, 
-  favorites, 
+import {
+  users,
+  workouts,
+  favorites,
   exerciseHistory,
-  type User, 
+  exercises,
+  type User,
   type InsertUser,
   type Workout,
   type InsertWorkout,
   type Favorite,
   type ExerciseHistoryRecord,
+  type ExerciseRecord,
+  type InsertExercise,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, or, isNull, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -32,6 +35,11 @@ export interface IStorage {
   getExerciseHistory(userId: string, exerciseId: string): Promise<ExerciseHistoryRecord | undefined>;
   getAllExerciseHistory(userId: string): Promise<ExerciseHistoryRecord[]>;
   updateExerciseHistory(userId: string, record: Partial<ExerciseHistoryRecord> & { exerciseId: string; exerciseName: string }): Promise<void>;
+
+  getExercises(userId: string): Promise<ExerciseRecord[]>;
+  createExercise(userId: string, data: InsertExercise): Promise<ExerciseRecord>;
+  deleteExercise(id: string, userId: string): Promise<void>;
+  updateExerciseName(id: string, userId: string, name: string): Promise<ExerciseRecord | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -175,6 +183,74 @@ export class DatabaseStorage implements IStorage {
         personalRecord: record.lastWeight || 0,
       });
     }
+  }
+  async getExercises(userId: string): Promise<ExerciseRecord[]> {
+    return db
+      .select()
+      .from(exercises)
+      .where(or(eq(exercises.userId, userId), isNull(exercises.userId)))
+      .orderBy(exercises.name);
+  }
+
+  async createExercise(userId: string, data: InsertExercise): Promise<ExerciseRecord> {
+    const [exercise] = await db
+      .insert(exercises)
+      .values({
+        id: sql`gen_random_uuid()`.mapWith(String),
+        userId,
+        name: data.name,
+        category: data.category,
+        muscleGroups: data.muscleGroups ?? [],
+      })
+      .returning();
+    return exercise;
+  }
+
+  async deleteExercise(id: string, userId: string): Promise<void> {
+    await db
+      .delete(favorites)
+      .where(eq(favorites.exerciseId, id));
+    await db
+      .delete(exerciseHistory)
+      .where(and(eq(exerciseHistory.exerciseId, id), eq(exerciseHistory.userId, userId)));
+    await db
+      .delete(exercises)
+      .where(and(eq(exercises.id, id), eq(exercises.userId, userId)));
+  }
+
+  async updateExerciseName(id: string, userId: string, name: string): Promise<ExerciseRecord | undefined> {
+    const [updated] = await db
+      .update(exercises)
+      .set({ name })
+      .where(and(eq(exercises.id, id), eq(exercises.userId, userId)))
+      .returning();
+    if (!updated) return undefined;
+
+    await db
+      .update(exerciseHistory)
+      .set({ exerciseName: name })
+      .where(and(eq(exerciseHistory.exerciseId, id), eq(exerciseHistory.userId, userId)));
+
+    const userWorkouts = await db
+      .select()
+      .from(workouts)
+      .where(eq(workouts.userId, userId));
+
+    for (const workout of userWorkouts) {
+      const workoutExercises = workout.exercises as { exerciseId: string; exerciseName: string; sets: unknown[] }[];
+      const hasMatch = workoutExercises.some((e) => e.exerciseId === id);
+      if (hasMatch) {
+        const updatedExercises = workoutExercises.map((e) =>
+          e.exerciseId === id ? { ...e, exerciseName: name } : e
+        );
+        await db
+          .update(workouts)
+          .set({ exercises: updatedExercises })
+          .where(eq(workouts.id, workout.id));
+      }
+    }
+
+    return updated;
   }
 }
 
