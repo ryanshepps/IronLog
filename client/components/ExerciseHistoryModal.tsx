@@ -54,6 +54,13 @@ function ProgressChart({
   const paddedMin = minWeight - weightRange * 0.1;
   const paddedMax = maxWeight + weightRange * 0.1;
 
+  const volumes = chartData.map(d => d.totalVolume);
+  const minVolume = Math.min(...volumes);
+  const maxVolume = Math.max(...volumes);
+  const volumeRange = maxVolume - minVolume || 1;
+  const paddedVolMin = minVolume - volumeRange * 0.1;
+  const paddedVolMax = maxVolume + volumeRange * 0.1;
+
   const getX = (index: number) => {
     const usableWidth = chartWidth - CHART_PADDING * 2;
     return CHART_PADDING + (index / (chartData.length - 1)) * usableWidth;
@@ -65,15 +72,25 @@ function ProgressChart({
     return CHART_HEIGHT - CHART_PADDING / 2 - normalized * usableHeight;
   };
 
+  const getVolumeY = (volume: number) => {
+    const usableHeight = CHART_HEIGHT - CHART_PADDING;
+    const normalized = (volume - paddedVolMin) / (paddedVolMax - paddedVolMin);
+    return CHART_HEIGHT - CHART_PADDING / 2 - normalized * usableHeight;
+  };
+
   // Create path using best weight per session
   let pathD = "";
+  let volumePathD = "";
   chartData.forEach((entry, index) => {
     const x = getX(index);
     const y = getY(entry.bestWeight);
+    const vy = getVolumeY(entry.totalVolume);
     if (index === 0) {
       pathD += `M ${x} ${y}`;
+      volumePathD += `M ${x} ${vy}`;
     } else {
       pathD += ` L ${x} ${y}`;
+      volumePathD += ` L ${x} ${vy}`;
     }
   });
 
@@ -86,9 +103,20 @@ function ProgressChart({
   return (
     <View style={styles.chartContainer}>
       <View style={styles.chartHeader}>
-        <ThemedText type="small" style={{ color: theme.textSecondary, fontWeight: "600" }}>
-          Weight Progress (Best Set)
-        </ThemedText>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.md, flexWrap: "wrap" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <View style={{ width: 10, height: 2, backgroundColor: theme.primary }} />
+            <ThemedText type="small" style={{ color: theme.textSecondary, fontWeight: "600" }}>
+              Weight
+            </ThemedText>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <View style={{ width: 10, height: 2, backgroundColor: theme.feelingEasy }} />
+            <ThemedText type="small" style={{ color: theme.textSecondary, fontWeight: "600" }}>
+              Volume
+            </ThemedText>
+          </View>
+        </View>
         <View style={[
           styles.trendBadge,
           { backgroundColor: trend >= 0 ? theme.feelingEasy + "20" : theme.error + "20" }
@@ -148,7 +176,19 @@ function ProgressChart({
           opacity={0.3}
         />
 
-        {/* Line */}
+        {/* Volume line */}
+        <Path
+          d={volumePathD}
+          fill="none"
+          stroke={theme.feelingEasy}
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray="5,3"
+          opacity={0.8}
+        />
+
+        {/* Weight line */}
         <Path
           d={pathD}
           fill="none"
@@ -158,7 +198,20 @@ function ProgressChart({
           strokeLinejoin="round"
         />
 
-        {/* Data points */}
+        {/* Volume points */}
+        {chartData.map((entry, index) => (
+          <Circle
+            key={`vol-${index}`}
+            cx={getX(index)}
+            cy={getVolumeY(entry.totalVolume)}
+            r={3}
+            fill={theme.feelingEasy}
+            stroke={theme.backgroundDefault}
+            strokeWidth={1.5}
+          />
+        ))}
+
+        {/* Weight points */}
         {chartData.map((entry, index) => (
           <Circle
             key={index}
