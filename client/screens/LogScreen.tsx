@@ -5,7 +5,7 @@ import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useNavigation, useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { HeaderButton } from "@react-navigation/elements";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -45,6 +45,7 @@ export default function LogScreen() {
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation();
+  const isFocused = useIsFocused();
 
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -97,6 +98,18 @@ export default function LogScreen() {
     setExerciseHistory(history);
     setPreferences(prefs);
   }, []);
+
+  useEffect(() => {
+    const parent = navigation.getParent();
+    if (!parent) return;
+    const unsub = parent.addListener("tabPress", () => {
+      if (isFocused) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setShowAddExercise(true);
+      }
+    });
+    return unsub;
+  }, [navigation, isFocused]);
 
   // Reload data when screen comes into focus
   useFocusEffect(

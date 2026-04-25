@@ -17,5 +17,8 @@
         "ascAppId": "6761734133"
       }
     }
+  },
+  "cli": {
+    "appVersionSource": "remote"
   }
 }
