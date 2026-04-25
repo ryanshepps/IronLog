@@ -81,12 +81,11 @@ function ExerciseListItem({
           <ThemedText type="body" style={styles.exerciseName}>
             {exercise.name}
           </ThemedText>
-          <ThemedText type="caption" style={{ color: theme.textSecondary }}>
-            {exercise.category}
-            {lastPerformance
-              ? ` • Last: ${lastPerformance.lastWeight} x ${lastPerformance.lastReps}`
-              : ""}
-          </ThemedText>
+          {lastPerformance ? (
+            <ThemedText type="caption" style={{ color: theme.textSecondary }}>
+              Last: {lastPerformance.lastWeight} x {lastPerformance.lastReps}
+            </ThemedText>
+          ) : null}
         </View>
         <Pressable
           onPress={(e) => {
@@ -125,7 +124,6 @@ export function AddExerciseModal({
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newExerciseName, setNewExerciseName] = useState("");
-  const [newExerciseCategory, setNewExerciseCategory] = useState("Custom");
 
   useEffect(() => {
     if (visible) {
@@ -164,13 +162,12 @@ export function AddExerciseModal({
   const handleCreateExercise = async () => {
     if (!newExerciseName.trim()) return;
     createExercise.mutate(
-      { name: newExerciseName.trim(), category: newExerciseCategory, muscleGroups: [] },
+      { name: newExerciseName.trim(), category: "Custom", muscleGroups: [] },
       {
         onSuccess: (exercise) => {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           setShowCreateForm(false);
           setNewExerciseName("");
-          setNewExerciseCategory("Custom");
           onSelectExercise(exercise as Exercise);
         },
       }
@@ -256,7 +253,6 @@ export function AddExerciseModal({
                   onPress={() => {
                     setShowCreateForm(false);
                     setNewExerciseName("");
-                    setNewExerciseCategory("Custom");
                   }}
                   hitSlop={12}
                 >
@@ -279,39 +275,6 @@ export function AddExerciseModal({
                 onChangeText={setNewExerciseName}
                 autoFocus
               />
-
-              <View style={styles.categoryPicker}>
-                {["Chest", "Back", "Shoulders", "Arms", "Legs", "Core", "Cardio", "Custom"].map(
-                  (cat) => (
-                    <Pressable
-                      key={cat}
-                      onPress={() => setNewExerciseCategory(cat)}
-                      style={[
-                        styles.categoryOption,
-                        {
-                          backgroundColor:
-                            newExerciseCategory === cat
-                              ? theme.primary
-                              : theme.backgroundSecondary,
-                        },
-                      ]}
-                    >
-                      <ThemedText
-                        type="small"
-                        style={{
-                          color:
-                            newExerciseCategory === cat
-                              ? "#FFFFFF"
-                              : theme.text,
-                          fontWeight: "600",
-                        }}
-                      >
-                        {cat}
-                      </ThemedText>
-                    </Pressable>
-                  )
-                )}
-              </View>
 
               <Pressable
                 style={[
@@ -467,18 +430,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: Spacing.lg,
   },
-  categoryPicker: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.sm,
-    marginBottom: Spacing.lg,
-  },
-  categoryOption: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.sm,
-  },
-  createButton: {
+createButton: {
     height: Spacing.buttonHeight,
     borderRadius: BorderRadius.sm,
     alignItems: "center",
