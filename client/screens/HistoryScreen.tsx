@@ -49,11 +49,15 @@ function Calendar({
   selectedYear,
   workoutDates,
   onMonthChange,
+  selectedDate,
+  onSelectDate,
 }: {
   selectedMonth: number;
   selectedYear: number;
   workoutDates: Set<string>;
   onMonthChange: (month: number, year: number) => void;
+  selectedDate: string | null;
+  onSelectDate: (date: string | null) => void;
 }) {
   const { theme } = useTheme();
 
@@ -150,35 +154,49 @@ function Calendar({
       </View>
 
       <View style={styles.calendarGrid}>
-        {days.map((day, index) => (
-          <View
-            key={`${day.date}-${index}`}
-            style={[
-              styles.calendarDay,
-              day.isToday && { backgroundColor: theme.primary + "20" },
-            ]}
-          >
-            <ThemedText
-              type="body"
-              style={{
-                color: day.isCurrentMonth
-                  ? day.isToday
-                    ? theme.primary
-                    : theme.text
-                  : theme.textSecondary,
-                fontWeight: day.isToday ? "700" : "400",
-                opacity: day.isCurrentMonth ? 1 : 0.4,
+        {days.map((day, index) => {
+          const isSelected = selectedDate === day.date;
+          return (
+            <Pressable
+              key={`${day.date}-${index}`}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onSelectDate(isSelected ? null : day.date);
               }}
+              style={({ pressed }) => [
+                styles.calendarDay,
+                day.isToday && { backgroundColor: theme.primary + "20" },
+                isSelected && { backgroundColor: theme.primary },
+                pressed && { opacity: 0.7 },
+              ]}
             >
-              {day.day}
-            </ThemedText>
-            {day.hasWorkout ? (
-              <View
-                style={[styles.workoutDot, { backgroundColor: theme.primary }]}
-              />
-            ) : null}
-          </View>
-        ))}
+              <ThemedText
+                type="body"
+                style={{
+                  color: isSelected
+                    ? "#FFFFFF"
+                    : day.isCurrentMonth
+                    ? day.isToday
+                      ? theme.primary
+                      : theme.text
+                    : theme.textSecondary,
+                  fontWeight: day.isToday || isSelected ? "700" : "400",
+                  opacity: day.isCurrentMonth ? 1 : 0.4,
+                }}
+              >
+                {day.day}
+              </ThemedText>
+              {day.hasWorkout ? (
+                <View
+                  style={[
+                    styles.workoutDot,
+                    { backgroundColor: isSelected ? "#FFFFFF" : theme.primary },
+                  ]}
+                />
+              ) : null}
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
@@ -272,6 +290,7 @@ export default function HistoryScreen() {
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<WorkoutExercise | null>(null);
 
@@ -315,13 +334,16 @@ export default function HistoryScreen() {
   }, [workouts]);
 
   const filteredWorkouts = useMemo(() => {
+    if (selectedDate) {
+      return workouts.filter((w) => w.date === selectedDate);
+    }
     return workouts.filter((w) => {
       const date = new Date(w.date);
       return (
         date.getMonth() === selectedMonth && date.getFullYear() === selectedYear
       );
     });
-  }, [workouts, selectedMonth, selectedYear]);
+  }, [workouts, selectedMonth, selectedYear, selectedDate]);
 
   const units = preferences?.units || "lbs";
 
@@ -355,7 +377,10 @@ export default function HistoryScreen() {
             onMonthChange={(month, year) => {
               setSelectedMonth(month);
               setSelectedYear(year);
+              setSelectedDate(null);
             }}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
           />
         }
         ListEmptyComponent={
