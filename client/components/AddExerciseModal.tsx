@@ -415,6 +415,7 @@ const styles = StyleSheet.create({
   },
   createForm: {
     paddingTop: Spacing.md,
+    paddingBottom: Spacing.xl,
   },
   createFormHeader: {
     flexDirection: "row",
@@ -430,10 +431,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: Spacing.lg,
   },
-createButton: {
+  createButton: {
     height: Spacing.buttonHeight,
     borderRadius: BorderRadius.sm,
     alignItems: "center",
     justifyContent: "center",
+    alignSelf: "stretch",
   },
 });
