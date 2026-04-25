@@ -12,6 +12,7 @@ import { ExerciseHistoryModal } from "@/components/ExerciseHistoryModal";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { WorkoutSet, ExerciseHistory } from "@/types/workout";
+import { getExercisePerformanceHistory } from "@/lib/storage";
 
 interface LogSetModalProps {
   visible: boolean;
@@ -47,6 +48,28 @@ export function LogSetModal({
   const [reps, setReps] = useState(0);
   const [feeling, setFeeling] = useState(5);
   const [showHistory, setShowHistory] = useState(false);
+  const [lastSessionAvgFeeling, setLastSessionAvgFeeling] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!visible || !exerciseId) {
+      setLastSessionAvgFeeling(null);
+      return;
+    }
+    let cancelled = false;
+    getExercisePerformanceHistory(exerciseId).then((entries) => {
+      if (cancelled) return;
+      const prev = entries.find((e) => e.sets.length > 0 && e.timestamp !== editingSet?.timestamp);
+      if (prev && prev.sets.length > 0) {
+        const avg = prev.sets.reduce((a, s) => a + s.feeling, 0) / prev.sets.length;
+        setLastSessionAvgFeeling(avg);
+      } else {
+        setLastSessionAvgFeeling(null);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, exerciseId, editingSet?.timestamp]);
 
   useEffect(() => {
     if (visible) {
@@ -96,7 +119,8 @@ export function LogSetModal({
 
   const showSuggestion =
     lastPerformance &&
-    lastPerformance.lastFeeling <= 3 &&
+    lastSessionAvgFeeling !== null &&
+    lastSessionAvgFeeling <= 3 &&
     weight === lastPerformance.lastWeight;
 
   return (
