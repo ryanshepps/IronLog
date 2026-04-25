@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, TextInput, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -26,6 +26,14 @@ export function NumericInput({
   max = 9999,
 }: NumericInputProps) {
   const { theme } = useTheme();
+  const [text, setText] = useState(value.toString());
+
+  useEffect(() => {
+    const parsed = parseFloat(text);
+    if (isNaN(parsed) || parsed !== value) {
+      setText(value.toString());
+    }
+  }, [value]);
 
   const handleIncrement = () => {
     const newValue = Math.min(value + step, max);
@@ -43,9 +51,25 @@ export function NumericInput({
     }
   };
 
-  const handleTextChange = (text: string) => {
-    const num = parseFloat(text) || 0;
-    onChange(Math.max(min, Math.min(num, max)));
+  const handleTextChange = (next: string) => {
+    const sanitized = next.replace(/[^0-9.]/g, "");
+    const parts = sanitized.split(".");
+    const normalized =
+      parts.length > 2 ? `${parts[0]}.${parts.slice(1).join("")}` : sanitized;
+    setText(normalized);
+    if (normalized === "" || normalized === ".") {
+      onChange(min);
+      return;
+    }
+    const num = parseFloat(normalized);
+    if (!isNaN(num)) {
+      onChange(Math.max(min, Math.min(num, max)));
+    }
+  };
+
+  const handleBlur = () => {
+    const num = parseFloat(text);
+    if (isNaN(num)) setText(value.toString());
   };
 
   return (
@@ -67,8 +91,9 @@ export function NumericInput({
         <View style={styles.valueContainer}>
           <TextInput
             style={[styles.input, { color: theme.text }]}
-            value={value.toString()}
+            value={text}
             onChangeText={handleTextChange}
+            onBlur={handleBlur}
             keyboardType="decimal-pad"
             selectTextOnFocus
           />
