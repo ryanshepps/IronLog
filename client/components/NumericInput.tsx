@@ -5,6 +5,7 @@ import * as Haptics from "expo-haptics";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
+import { sanitizeNumericInput, clampNumber } from "@/lib/numeric";
 
 interface NumericInputProps {
   label: string;
@@ -52,10 +53,7 @@ export function NumericInput({
   };
 
   const handleTextChange = (next: string) => {
-    const sanitized = next.replace(/[^0-9.]/g, "");
-    const parts = sanitized.split(".");
-    const normalized =
-      parts.length > 2 ? `${parts[0]}.${parts.slice(1).join("")}` : sanitized;
+    const normalized = sanitizeNumericInput(next);
     setText(normalized);
     if (normalized === "" || normalized === ".") {
       onChange(min);
@@ -63,7 +61,7 @@ export function NumericInput({
     }
     const num = parseFloat(normalized);
     if (!isNaN(num)) {
-      onChange(Math.max(min, Math.min(num, max)));
+      onChange(clampNumber(num, min, max));
     }
   };
 
