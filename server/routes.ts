@@ -9,6 +9,9 @@ import {
   loginSchema,
   signupSchema,
   insertExerciseSchema,
+  updateProfileSchema,
+  upsertWorkoutSchema,
+  exerciseHistoryRecordSchema,
   type User,
 } from "@shared/schema";
 
@@ -130,8 +133,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   app.put("/api/auth/profile", requireAuth, wrap(async (req, res) => {
-    const { displayName, units } = req.body;
-    const user = await storage.updateUser(req.session.userId!, { displayName, units });
+    const result = updateProfileSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: "Invalid input", details: result.error.flatten() });
+    }
+    const user = await storage.updateUser(req.session.userId!, result.data);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -152,18 +158,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   app.post("/api/workouts", requireAuth, wrap(async (req, res) => {
+    const result = upsertWorkoutSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: "Invalid input", details: result.error.flatten() });
+    }
     const workout = await storage.saveWorkout({
-      ...req.body,
+      ...result.data,
       userId: req.session.userId!,
     });
     res.json(workout);
   }));
 
   app.put("/api/workouts/:id", requireAuth, wrap(async (req, res) => {
+    const result = upsertWorkoutSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: "Invalid input", details: result.error.flatten() });
+    }
     const workout = await storage.updateWorkout(
       req.params.id,
       req.session.userId!,
-      req.body
+      result.data
     );
     if (!workout) {
       return res.status(404).json({ error: "Workout not found" });
@@ -205,7 +219,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   app.post("/api/exercise-history", requireAuth, wrap(async (req, res) => {
-    await storage.updateExerciseHistory(req.session.userId!, req.body);
+    const result = exerciseHistoryRecordSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: "Invalid input", details: result.error.flatten() });
+    }
+    await storage.updateExerciseHistory(req.session.userId!, result.data);
     res.json({ success: true });
   }));
 
