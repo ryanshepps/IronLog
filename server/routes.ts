@@ -340,7 +340,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/sync", requireAuth, async (req, res) => {
     try {
-      const { workouts: clientWorkouts, favorites: clientFavorites } = req.body;
+      const {
+        workouts: clientWorkouts,
+        favorites: clientFavorites,
+        exerciseHistory: clientExerciseHistory,
+      } = req.body;
       const userId = req.session.userId!;
 
       if (clientWorkouts && Array.isArray(clientWorkouts)) {
@@ -351,10 +355,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (clientFavorites && Array.isArray(clientFavorites)) {
         const currentFavorites = await storage.getFavorites(userId);
-        
+
         for (const exerciseId of clientFavorites) {
           if (!currentFavorites.includes(exerciseId)) {
             await storage.addFavorite(userId, exerciseId);
+          }
+        }
+      }
+
+      if (clientExerciseHistory && Array.isArray(clientExerciseHistory)) {
+        for (const record of clientExerciseHistory) {
+          if (record?.exerciseId && record?.exerciseName) {
+            await storage.updateExerciseHistory(userId, record);
           }
         }
       }
