@@ -34,7 +34,7 @@ import {
   updateExerciseHistory,
   getPreferences,
   generateId,
-  formatDate,
+  formatDateLocal,
 } from "@/lib/storage";
 
 const emptyWorkoutImage = require("../../assets/images/empty-states/empty-workout.png");
@@ -69,7 +69,7 @@ export default function LogScreen() {
       getPreferences(),
     ]);
 
-    const today = formatDate(new Date());
+    const today = formatDateLocal(new Date());
 
     if (currentWorkout && currentWorkout.date === today) {
       setWorkout(currentWorkout);
@@ -139,7 +139,7 @@ export default function LogScreen() {
     
     const newWorkout: Workout = {
       id: generateId(),
-      date: formatDate(new Date()),
+      date: formatDateLocal(new Date()),
       exercises: [],
     };
     setWorkout(newWorkout);

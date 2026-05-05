@@ -277,10 +277,6 @@ export async function getWorkoutDates(): Promise<string[]> {
   return [...new Set(workouts.map((w) => w.date))];
 }
 
-export function formatDate(date: Date): string {
-  return formatDateLocal(date);
-}
-
 export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
