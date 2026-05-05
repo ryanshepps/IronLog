@@ -55,6 +55,15 @@ const KEYS = {
   CURRENT_WORKOUT: "@ironlog/currentWorkout",
 };
 
+async function withMutation<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    console.error(`Error ${name}:`, error);
+    throw error;
+  }
+}
+
 async function readCache<T>(key: string, fallback: T): Promise<T> {
   try {
     const data = await AsyncStorage.getItem(key);
@@ -95,7 +104,7 @@ export async function getWorkouts(): Promise<Workout[]> {
 }
 
 export async function saveWorkout(workout: Workout): Promise<void> {
-  try {
+  return withMutation("saving workout", async () => {
     const workouts = await getWorkoutsFromCache();
     const existingIndex = workouts.findIndex((w) => w.id === workout.id);
 
@@ -107,22 +116,16 @@ export async function saveWorkout(workout: Workout): Promise<void> {
 
     await AsyncStorage.setItem(KEYS.WORKOUTS, JSON.stringify(workouts));
     pushOrQueue("POST", "/api/workouts", workout).catch(() => {});
-  } catch (error) {
-    console.error("Error saving workout:", error);
-    throw error;
-  }
+  });
 }
 
 export async function deleteWorkout(workoutId: string): Promise<void> {
-  try {
+  return withMutation("deleting workout", async () => {
     const workouts = await getWorkoutsFromCache();
     const filtered = workouts.filter((w) => w.id !== workoutId);
     await AsyncStorage.setItem(KEYS.WORKOUTS, JSON.stringify(filtered));
     pushOrQueue("DELETE", `/api/workouts/${workoutId}`).catch(() => {});
-  } catch (error) {
-    console.error("Error deleting workout:", error);
-    throw error;
-  }
+  });
 }
 
 export async function getCurrentWorkout(): Promise<Workout | null> {
@@ -136,16 +139,13 @@ export async function getCurrentWorkout(): Promise<Workout | null> {
 }
 
 export async function saveCurrentWorkout(workout: Workout | null): Promise<void> {
-  try {
+  return withMutation("saving current workout", async () => {
     if (workout) {
       await AsyncStorage.setItem(KEYS.CURRENT_WORKOUT, JSON.stringify(workout));
     } else {
       await AsyncStorage.removeItem(KEYS.CURRENT_WORKOUT);
     }
-  } catch (error) {
-    console.error("Error saving current workout:", error);
-    throw error;
-  }
+  });
 }
 
 export async function getFavoritesFromCache(): Promise<string[]> {
@@ -162,29 +162,23 @@ export async function getFavorites(): Promise<string[]> {
 }
 
 export async function addFavorite(exerciseId: string): Promise<void> {
-  try {
+  return withMutation("adding favorite", async () => {
     const favorites = await getFavoritesFromCache();
     if (!favorites.includes(exerciseId)) {
       favorites.unshift(exerciseId);
       await AsyncStorage.setItem(KEYS.FAVORITES, JSON.stringify(favorites));
     }
     pushOrQueue("POST", `/api/favorites/${exerciseId}`).catch(() => {});
-  } catch (error) {
-    console.error("Error adding favorite:", error);
-    throw error;
-  }
+  });
 }
 
 export async function removeFavorite(exerciseId: string): Promise<void> {
-  try {
+  return withMutation("removing favorite", async () => {
     const favorites = await getFavoritesFromCache();
     const filtered = favorites.filter((id) => id !== exerciseId);
     await AsyncStorage.setItem(KEYS.FAVORITES, JSON.stringify(filtered));
     pushOrQueue("DELETE", `/api/favorites/${exerciseId}`).catch(() => {});
-  } catch (error) {
-    console.error("Error removing favorite:", error);
-    throw error;
-  }
+  });
 }
 
 export async function toggleFavorite(exerciseId: string): Promise<boolean> {
@@ -230,13 +224,12 @@ export async function updateExerciseHistory(
   exerciseName: string,
   set: WorkoutSet
 ): Promise<void> {
-  try {
-    const data = await AsyncStorage.getItem(KEYS.EXERCISE_HISTORY);
-    const historyMap: Record<string, ExerciseHistory> = data ? JSON.parse(data) : {};
-    
+  return withMutation("updating exercise history", async () => {
+    const historyMap = await getAllExerciseHistoryFromCache();
+
     const existing = historyMap[exerciseId];
     const currentPR = existing?.personalRecord || 0;
-    
+
     const record = {
       exerciseId,
       exerciseName,
@@ -250,10 +243,7 @@ export async function updateExerciseHistory(
 
     await AsyncStorage.setItem(KEYS.EXERCISE_HISTORY, JSON.stringify(historyMap));
     pushOrQueue("POST", "/api/exercise-history", record).catch(() => {});
-  } catch (error) {
-    console.error("Error updating exercise history:", error);
-    throw error;
-  }
+  });
 }
 
 export async function getPreferences(): Promise<UserPreferences> {
@@ -267,14 +257,11 @@ export async function getPreferences(): Promise<UserPreferences> {
 }
 
 export async function savePreferences(preferences: Partial<UserPreferences>): Promise<void> {
-  try {
+  return withMutation("saving preferences", async () => {
     const current = await getPreferences();
     const updated = { ...current, ...preferences };
     await AsyncStorage.setItem(KEYS.PREFERENCES, JSON.stringify(updated));
-  } catch (error) {
-    console.error("Error saving preferences:", error);
-    throw error;
-  }
+  });
 }
 
 export async function getWorkoutsByDateRange(
