@@ -55,25 +55,43 @@ const KEYS = {
   CURRENT_WORKOUT: "@ironlog/currentWorkout",
 };
 
-export async function getWorkoutsFromCache(): Promise<Workout[]> {
+async function readCache<T>(key: string, fallback: T): Promise<T> {
   try {
-    const data = await AsyncStorage.getItem(KEYS.WORKOUTS);
-    return data ? JSON.parse(data) : [];
+    const data = await AsyncStorage.getItem(key);
+    return data ? (JSON.parse(data) as T) : fallback;
   } catch (error) {
-    console.error("Error reading cached workouts:", error);
-    return [];
+    console.error(`Error reading cache ${key}:`, error);
+    return fallback;
   }
 }
 
-export async function getWorkouts(): Promise<Workout[]> {
+async function cachedRead<TRemote, TLocal>(
+  key: string,
+  path: string,
+  transform: (remote: TRemote) => TLocal,
+  fallback: TLocal
+): Promise<TLocal> {
   try {
-    const remote = await fetchJSON<any[]>("/api/workouts");
-    const normalized = remote.map(normalizeWorkout);
-    await AsyncStorage.setItem(KEYS.WORKOUTS, JSON.stringify(normalized));
-    return normalized;
-  } catch (error) {
-    return getWorkoutsFromCache();
+    const remote = await fetchJSON<TRemote>(path);
+    const value = transform(remote);
+    await AsyncStorage.setItem(key, JSON.stringify(value));
+    return value;
+  } catch {
+    return readCache<TLocal>(key, fallback);
   }
+}
+
+export async function getWorkoutsFromCache(): Promise<Workout[]> {
+  return readCache<Workout[]>(KEYS.WORKOUTS, []);
+}
+
+export async function getWorkouts(): Promise<Workout[]> {
+  return cachedRead<any[], Workout[]>(
+    KEYS.WORKOUTS,
+    "/api/workouts",
+    (remote) => remote.map(normalizeWorkout),
+    []
+  );
 }
 
 export async function saveWorkout(workout: Workout): Promise<void> {
@@ -131,23 +149,16 @@ export async function saveCurrentWorkout(workout: Workout | null): Promise<void>
 }
 
 export async function getFavoritesFromCache(): Promise<string[]> {
-  try {
-    const data = await AsyncStorage.getItem(KEYS.FAVORITES);
-    return data ? JSON.parse(data) : [];
-  } catch (error) {
-    console.error("Error reading cached favorites:", error);
-    return [];
-  }
+  return readCache<string[]>(KEYS.FAVORITES, []);
 }
 
 export async function getFavorites(): Promise<string[]> {
-  try {
-    const remote = await fetchJSON<string[]>("/api/favorites");
-    await AsyncStorage.setItem(KEYS.FAVORITES, JSON.stringify(remote));
-    return remote;
-  } catch (error) {
-    return getFavoritesFromCache();
-  }
+  return cachedRead<string[], string[]>(
+    KEYS.FAVORITES,
+    "/api/favorites",
+    (remote) => remote,
+    []
+  );
 }
 
 export async function addFavorite(exerciseId: string): Promise<void> {
@@ -190,13 +201,7 @@ export async function toggleFavorite(exerciseId: string): Promise<boolean> {
 }
 
 export async function getAllExerciseHistoryFromCache(): Promise<Record<string, ExerciseHistory>> {
-  try {
-    const data = await AsyncStorage.getItem(KEYS.EXERCISE_HISTORY);
-    return data ? JSON.parse(data) : {};
-  } catch (error) {
-    console.error("Error reading cached history:", error);
-    return {};
-  }
+  return readCache<Record<string, ExerciseHistory>>(KEYS.EXERCISE_HISTORY, {});
 }
 
 export async function getExerciseHistory(exerciseId: string): Promise<ExerciseHistory | null> {
@@ -205,18 +210,19 @@ export async function getExerciseHistory(exerciseId: string): Promise<ExerciseHi
 }
 
 export async function getAllExerciseHistory(): Promise<Record<string, ExerciseHistory>> {
-  try {
-    const remote = await fetchJSON<any[]>("/api/exercise-history");
-    const map: Record<string, ExerciseHistory> = {};
-    for (const r of remote) {
-      const norm = normalizeHistoryRecord(r);
-      map[norm.exerciseId] = norm;
-    }
-    await AsyncStorage.setItem(KEYS.EXERCISE_HISTORY, JSON.stringify(map));
-    return map;
-  } catch (error) {
-    return getAllExerciseHistoryFromCache();
-  }
+  return cachedRead<any[], Record<string, ExerciseHistory>>(
+    KEYS.EXERCISE_HISTORY,
+    "/api/exercise-history",
+    (remote) => {
+      const map: Record<string, ExerciseHistory> = {};
+      for (const r of remote) {
+        const norm = normalizeHistoryRecord(r);
+        map[norm.exerciseId] = norm;
+      }
+      return map;
+    },
+    {}
+  );
 }
 
 export async function updateExerciseHistory(
