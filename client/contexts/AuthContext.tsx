@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { apiRequest, getApiUrl } from "@/lib/query-client";
+import { runMigrationV1IfNeeded } from "@/lib/migration";
 
 export interface AuthUser {
   id: string;
@@ -35,6 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const userData = await res.json();
         setUser(userData);
+        runMigrationV1IfNeeded(userData.id).catch((e) =>
+          console.error("Migration error:", e)
+        );
       } else {
         setUser(null);
       }
@@ -54,16 +58,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await apiRequest("POST", "/api/auth/login", { email, password });
     const userData = await res.json();
     setUser(userData);
+    runMigrationV1IfNeeded(userData.id).catch((e) =>
+      console.error("Migration error:", e)
+    );
   }, []);
 
   const signup = useCallback(async (email: string, password: string, displayName?: string) => {
-    const res = await apiRequest("POST", "/api/auth/signup", { 
-      email, 
-      password, 
-      displayName: displayName || "Athlete" 
+    const res = await apiRequest("POST", "/api/auth/signup", {
+      email,
+      password,
+      displayName: displayName || "Athlete"
     });
     const userData = await res.json();
     setUser(userData);
+    runMigrationV1IfNeeded(userData.id).catch((e) =>
+      console.error("Migration error:", e)
+    );
   }, []);
 
   const logout = useCallback(async () => {
