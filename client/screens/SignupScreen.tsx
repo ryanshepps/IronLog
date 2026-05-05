@@ -1,29 +1,17 @@
 import React, { useState } from "react";
-import {
-  View,
-  StyleSheet,
-  TextInput,
-  Pressable,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { View, TextInput, Pressable, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
+import { AuthScreen, authStyles } from "@/components/AuthScreen";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
-import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import type { AuthStackParamList } from "@/navigation/RootStackNavigator";
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, "Signup">;
 
 export default function SignupScreen() {
   const { theme } = useTheme();
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { signup } = useAuth();
 
@@ -62,212 +50,104 @@ export default function SignupScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <ScrollView
-          contentContainerStyle={[
-            styles.content,
+    <AuthScreen
+      title="Create Account"
+      subtitle="Start tracking your workouts today"
+      error={error}
+      footer={
+        <>
+          <ThemedText style={[authStyles.footerText, { color: theme.textSecondary }]}>
+            Already have an account?
+          </ThemedText>
+          <Pressable onPress={() => navigation.navigate("Login")} testID="button-go-login">
+            <ThemedText style={[authStyles.linkText, { color: theme.primary }]}>
+              Log In
+            </ThemedText>
+          </Pressable>
+        </>
+      }
+    >
+      <View style={authStyles.inputGroup}>
+        <ThemedText style={authStyles.label}>Display Name (optional)</ThemedText>
+        <TextInput
+          style={[
+            authStyles.input,
             {
-              paddingTop: insets.top + Spacing["4xl"],
-              paddingBottom: insets.bottom + Spacing["2xl"],
+              backgroundColor: theme.backgroundSecondary,
+              color: theme.text,
+              borderColor: theme.border,
             },
           ]}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.header}>
-            <ThemedText style={styles.title}>Create Account</ThemedText>
-            <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
-              Start tracking your workouts today
-            </ThemedText>
-          </View>
+          placeholder="Your name"
+          placeholderTextColor={theme.textSecondary}
+          value={displayName}
+          onChangeText={setDisplayName}
+          autoCapitalize="words"
+          autoCorrect={false}
+          testID="input-displayname"
+        />
+      </View>
 
-          <View style={styles.form}>
-            {error ? (
-              <View style={[styles.errorBox, { backgroundColor: theme.primary + "20" }]}>
-                <ThemedText style={[styles.errorText, { color: theme.primary }]}>
-                  {error}
-                </ThemedText>
-              </View>
-            ) : null}
+      <View style={authStyles.inputGroup}>
+        <ThemedText style={authStyles.label}>Email</ThemedText>
+        <TextInput
+          style={[
+            authStyles.input,
+            {
+              backgroundColor: theme.backgroundSecondary,
+              color: theme.text,
+              borderColor: theme.border,
+            },
+          ]}
+          placeholder="you@example.com"
+          placeholderTextColor={theme.textSecondary}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+          testID="input-email"
+        />
+      </View>
 
-            <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Display Name (optional)</ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: theme.backgroundSecondary,
-                    color: theme.text,
-                    borderColor: theme.border,
-                  },
-                ]}
-                placeholder="Your name"
-                placeholderTextColor={theme.textSecondary}
-                value={displayName}
-                onChangeText={setDisplayName}
-                autoCapitalize="words"
-                autoCorrect={false}
-                testID="input-displayname"
-              />
-            </View>
+      <View style={authStyles.inputGroup}>
+        <ThemedText style={authStyles.label}>Password</ThemedText>
+        <TextInput
+          style={[
+            authStyles.input,
+            {
+              backgroundColor: theme.backgroundSecondary,
+              color: theme.text,
+              borderColor: theme.border,
+            },
+          ]}
+          placeholder="At least 6 characters"
+          placeholderTextColor={theme.textSecondary}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoComplete="new-password"
+          testID="input-password"
+        />
+      </View>
 
-            <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Email</ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: theme.backgroundSecondary,
-                    color: theme.text,
-                    borderColor: theme.border,
-                  },
-                ]}
-                placeholder="you@example.com"
-                placeholderTextColor={theme.textSecondary}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-                testID="input-email"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Password</ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: theme.backgroundSecondary,
-                    color: theme.text,
-                    borderColor: theme.border,
-                  },
-                ]}
-                placeholder="At least 6 characters"
-                placeholderTextColor={theme.textSecondary}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoComplete="new-password"
-                testID="input-password"
-              />
-            </View>
-
-            <Pressable
-              style={[
-                styles.button,
-                { backgroundColor: theme.primary },
-                isLoading && styles.buttonDisabled,
-              ]}
-              onPress={handleSignup}
-              disabled={isLoading}
-              testID="button-signup"
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <ThemedText style={styles.buttonText}>Create Account</ThemedText>
-              )}
-            </Pressable>
-          </View>
-
-          <View style={styles.footer}>
-            <ThemedText style={[styles.footerText, { color: theme.textSecondary }]}>
-              Already have an account?
-            </ThemedText>
-            <Pressable onPress={() => navigation.navigate("Login")} testID="button-go-login">
-              <ThemedText style={[styles.linkText, { color: theme.primary }]}>
-                Log In
-              </ThemedText>
-            </Pressable>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </ThemedView>
+      <Pressable
+        style={[
+          authStyles.button,
+          { backgroundColor: theme.primary },
+          isLoading && authStyles.buttonDisabled,
+        ]}
+        onPress={handleSignup}
+        disabled={isLoading}
+        testID="button-signup"
+      >
+        {isLoading ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <ThemedText style={authStyles.buttonText}>Create Account</ThemedText>
+        )}
+      </Pressable>
+    </AuthScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  flex: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    paddingHorizontal: Spacing.xl,
-    justifyContent: "center",
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: Spacing["4xl"],
-  },
-  title: {
-    ...Typography.hero,
-    marginBottom: Spacing.sm,
-  },
-  subtitle: {
-    ...Typography.body,
-    textAlign: "center",
-  },
-  form: {
-    gap: Spacing.lg,
-  },
-  inputGroup: {
-    gap: Spacing.xs,
-  },
-  label: {
-    ...Typography.small,
-    fontWeight: "600",
-    marginLeft: Spacing.xs,
-  },
-  input: {
-    height: Spacing.inputHeight,
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.lg,
-    ...Typography.body,
-    borderWidth: 1,
-  },
-  button: {
-    height: Spacing.buttonHeight,
-    borderRadius: BorderRadius.sm,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: Spacing.md,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    ...Typography.h4,
-    color: "#FFFFFF",
-  },
-  errorBox: {
-    padding: Spacing.md,
-    borderRadius: BorderRadius.xs,
-  },
-  errorText: {
-    ...Typography.small,
-    textAlign: "center",
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: Spacing.xs,
-    marginTop: Spacing["3xl"],
-  },
-  footerText: {
-    ...Typography.body,
-  },
-  linkText: {
-    ...Typography.body,
-    fontWeight: "600",
-  },
-});
