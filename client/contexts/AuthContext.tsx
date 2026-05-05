@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { apiRequest, getApiUrl } from "@/lib/query-client";
 import { runMigrationV1IfNeeded } from "@/lib/migration";
+import { flushQueue } from "@/lib/write-queue";
 
 export interface AuthUser {
   id: string;
@@ -36,9 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const userData = await res.json();
         setUser(userData);
-        runMigrationV1IfNeeded(userData.id).catch((e) =>
-          console.error("Migration error:", e)
-        );
+        runMigrationV1IfNeeded(userData.id)
+          .then(() => flushQueue())
+          .catch((e) => console.error("Migration error:", e));
       } else {
         setUser(null);
       }

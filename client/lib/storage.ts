@@ -7,6 +7,7 @@ import {
   DEFAULT_PREFERENCES,
 } from "@/types/workout";
 import { apiRequest } from "@/lib/query-client";
+import { pushOrQueue } from "@/lib/write-queue";
 
 export { formatDateLocal } from "@/lib/date";
 import { formatDateLocal } from "@/lib/date";
@@ -77,16 +78,17 @@ export async function getWorkouts(): Promise<Workout[]> {
 
 export async function saveWorkout(workout: Workout): Promise<void> {
   try {
-    const workouts = await getWorkouts();
+    const workouts = await getWorkoutsFromCache();
     const existingIndex = workouts.findIndex((w) => w.id === workout.id);
-    
+
     if (existingIndex >= 0) {
       workouts[existingIndex] = workout;
     } else {
       workouts.unshift(workout);
     }
-    
+
     await AsyncStorage.setItem(KEYS.WORKOUTS, JSON.stringify(workouts));
+    pushOrQueue("POST", "/api/workouts", workout).catch(() => {});
   } catch (error) {
     console.error("Error saving workout:", error);
     throw error;
@@ -95,9 +97,10 @@ export async function saveWorkout(workout: Workout): Promise<void> {
 
 export async function deleteWorkout(workoutId: string): Promise<void> {
   try {
-    const workouts = await getWorkouts();
+    const workouts = await getWorkoutsFromCache();
     const filtered = workouts.filter((w) => w.id !== workoutId);
     await AsyncStorage.setItem(KEYS.WORKOUTS, JSON.stringify(filtered));
+    pushOrQueue("DELETE", `/api/workouts/${workoutId}`).catch(() => {});
   } catch (error) {
     console.error("Error deleting workout:", error);
     throw error;
@@ -149,11 +152,12 @@ export async function getFavorites(): Promise<string[]> {
 
 export async function addFavorite(exerciseId: string): Promise<void> {
   try {
-    const favorites = await getFavorites();
+    const favorites = await getFavoritesFromCache();
     if (!favorites.includes(exerciseId)) {
       favorites.unshift(exerciseId);
       await AsyncStorage.setItem(KEYS.FAVORITES, JSON.stringify(favorites));
     }
+    pushOrQueue("POST", `/api/favorites/${exerciseId}`).catch(() => {});
   } catch (error) {
     console.error("Error adding favorite:", error);
     throw error;
@@ -162,9 +166,10 @@ export async function addFavorite(exerciseId: string): Promise<void> {
 
 export async function removeFavorite(exerciseId: string): Promise<void> {
   try {
-    const favorites = await getFavorites();
+    const favorites = await getFavoritesFromCache();
     const filtered = favorites.filter((id) => id !== exerciseId);
     await AsyncStorage.setItem(KEYS.FAVORITES, JSON.stringify(filtered));
+    pushOrQueue("DELETE", `/api/favorites/${exerciseId}`).catch(() => {});
   } catch (error) {
     console.error("Error removing favorite:", error);
     throw error;
@@ -226,7 +231,7 @@ export async function updateExerciseHistory(
     const existing = historyMap[exerciseId];
     const currentPR = existing?.personalRecord || 0;
     
-    historyMap[exerciseId] = {
+    const record = {
       exerciseId,
       exerciseName,
       lastWeight: set.weight,
@@ -235,8 +240,10 @@ export async function updateExerciseHistory(
       lastPerformed: set.timestamp,
       personalRecord: Math.max(currentPR, set.weight),
     };
-    
+    historyMap[exerciseId] = record;
+
     await AsyncStorage.setItem(KEYS.EXERCISE_HISTORY, JSON.stringify(historyMap));
+    pushOrQueue("POST", "/api/exercise-history", record).catch(() => {});
   } catch (error) {
     console.error("Error updating exercise history:", error);
     throw error;
