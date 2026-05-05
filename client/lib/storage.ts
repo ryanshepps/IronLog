@@ -21,7 +21,24 @@ function toMs(value: unknown): number {
   return 0;
 }
 
-function normalizeWorkout(raw: any): Workout {
+interface RawWorkout {
+  id: string;
+  date: string;
+  exercises?: Workout["exercises"];
+  completedAt?: string | number | null;
+}
+
+interface RawHistoryRecord {
+  exerciseId: string;
+  exerciseName: string;
+  lastWeight?: number | null;
+  lastReps?: number | null;
+  lastFeeling?: number | null;
+  lastPerformed?: string | number | null;
+  personalRecord?: number | null;
+}
+
+function normalizeWorkout(raw: RawWorkout): Workout {
   return {
     id: raw.id,
     date: raw.date,
@@ -30,7 +47,7 @@ function normalizeWorkout(raw: any): Workout {
   };
 }
 
-function normalizeHistoryRecord(raw: any): ExerciseHistory {
+function normalizeHistoryRecord(raw: RawHistoryRecord): ExerciseHistory {
   return {
     exerciseId: raw.exerciseId,
     exerciseName: raw.exerciseName,
@@ -95,7 +112,7 @@ export async function getWorkoutsFromCache(): Promise<Workout[]> {
 }
 
 export async function getWorkouts(): Promise<Workout[]> {
-  return cachedRead<any[], Workout[]>(
+  return cachedRead<RawWorkout[], Workout[]>(
     KEYS.WORKOUTS,
     "/api/workouts",
     (remote) => remote.map(normalizeWorkout),
@@ -204,7 +221,7 @@ export async function getExerciseHistory(exerciseId: string): Promise<ExerciseHi
 }
 
 export async function getAllExerciseHistory(): Promise<Record<string, ExerciseHistory>> {
-  return cachedRead<any[], Record<string, ExerciseHistory>>(
+  return cachedRead<RawHistoryRecord[], Record<string, ExerciseHistory>>(
     KEYS.EXERCISE_HISTORY,
     "/api/exercise-history",
     (remote) => {
