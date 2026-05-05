@@ -6,9 +6,45 @@ import {
   UserPreferences,
   DEFAULT_PREFERENCES,
 } from "@/types/workout";
+import { apiRequest } from "@/lib/query-client";
 
 export { formatDateLocal } from "@/lib/date";
 import { formatDateLocal } from "@/lib/date";
+
+function toMs(value: unknown): number {
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+}
+
+function normalizeWorkout(raw: any): Workout {
+  return {
+    id: raw.id,
+    date: raw.date,
+    exercises: raw.exercises ?? [],
+    completedAt: raw.completedAt ? toMs(raw.completedAt) : undefined,
+  };
+}
+
+function normalizeHistoryRecord(raw: any): ExerciseHistory {
+  return {
+    exerciseId: raw.exerciseId,
+    exerciseName: raw.exerciseName,
+    lastWeight: raw.lastWeight ?? 0,
+    lastReps: raw.lastReps ?? 0,
+    lastFeeling: raw.lastFeeling ?? 5,
+    lastPerformed: toMs(raw.lastPerformed),
+    personalRecord: raw.personalRecord ?? 0,
+  };
+}
+
+async function fetchJSON<T>(path: string): Promise<T> {
+  const res = await apiRequest("GET", path);
+  return (await res.json()) as T;
+}
 
 const KEYS = {
   WORKOUTS: "@ironlog/workouts",
@@ -18,13 +54,24 @@ const KEYS = {
   CURRENT_WORKOUT: "@ironlog/currentWorkout",
 };
 
-export async function getWorkouts(): Promise<Workout[]> {
+export async function getWorkoutsFromCache(): Promise<Workout[]> {
   try {
     const data = await AsyncStorage.getItem(KEYS.WORKOUTS);
     return data ? JSON.parse(data) : [];
   } catch (error) {
-    console.error("Error getting workouts:", error);
+    console.error("Error reading cached workouts:", error);
     return [];
+  }
+}
+
+export async function getWorkouts(): Promise<Workout[]> {
+  try {
+    const remote = await fetchJSON<any[]>("/api/workouts");
+    const normalized = remote.map(normalizeWorkout);
+    await AsyncStorage.setItem(KEYS.WORKOUTS, JSON.stringify(normalized));
+    return normalized;
+  } catch (error) {
+    return getWorkoutsFromCache();
   }
 }
 
@@ -80,13 +127,23 @@ export async function saveCurrentWorkout(workout: Workout | null): Promise<void>
   }
 }
 
-export async function getFavorites(): Promise<string[]> {
+export async function getFavoritesFromCache(): Promise<string[]> {
   try {
     const data = await AsyncStorage.getItem(KEYS.FAVORITES);
     return data ? JSON.parse(data) : [];
   } catch (error) {
-    console.error("Error getting favorites:", error);
+    console.error("Error reading cached favorites:", error);
     return [];
+  }
+}
+
+export async function getFavorites(): Promise<string[]> {
+  try {
+    const remote = await fetchJSON<string[]>("/api/favorites");
+    await AsyncStorage.setItem(KEYS.FAVORITES, JSON.stringify(remote));
+    return remote;
+  } catch (error) {
+    return getFavoritesFromCache();
   }
 }
 
@@ -127,24 +184,33 @@ export async function toggleFavorite(exerciseId: string): Promise<boolean> {
   }
 }
 
-export async function getExerciseHistory(exerciseId: string): Promise<ExerciseHistory | null> {
-  try {
-    const data = await AsyncStorage.getItem(KEYS.EXERCISE_HISTORY);
-    const historyMap: Record<string, ExerciseHistory> = data ? JSON.parse(data) : {};
-    return historyMap[exerciseId] || null;
-  } catch (error) {
-    console.error("Error getting exercise history:", error);
-    return null;
-  }
-}
-
-export async function getAllExerciseHistory(): Promise<Record<string, ExerciseHistory>> {
+export async function getAllExerciseHistoryFromCache(): Promise<Record<string, ExerciseHistory>> {
   try {
     const data = await AsyncStorage.getItem(KEYS.EXERCISE_HISTORY);
     return data ? JSON.parse(data) : {};
   } catch (error) {
-    console.error("Error getting all exercise history:", error);
+    console.error("Error reading cached history:", error);
     return {};
+  }
+}
+
+export async function getExerciseHistory(exerciseId: string): Promise<ExerciseHistory | null> {
+  const map = await getAllExerciseHistory();
+  return map[exerciseId] || null;
+}
+
+export async function getAllExerciseHistory(): Promise<Record<string, ExerciseHistory>> {
+  try {
+    const remote = await fetchJSON<any[]>("/api/exercise-history");
+    const map: Record<string, ExerciseHistory> = {};
+    for (const r of remote) {
+      const norm = normalizeHistoryRecord(r);
+      map[norm.exerciseId] = norm;
+    }
+    await AsyncStorage.setItem(KEYS.EXERCISE_HISTORY, JSON.stringify(map));
+    return map;
+  } catch (error) {
+    return getAllExerciseHistoryFromCache();
   }
 }
 
