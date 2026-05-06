@@ -48,6 +48,7 @@
     "expo-web-browser": "~15.0.9",
     "express": "^5.0.1",
     "express-session": "^1.18.2",
+    "fuse.js": "^7.3.0",
     "http-proxy-middleware": "^3.0.5",
     "pg": "^8.16.3",
     "react": "19.1.0",
