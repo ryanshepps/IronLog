@@ -24,6 +24,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { Exercise } from "@/types/workout";
 import { useExercises, useCreateExercise } from "@/hooks/useExercises";
+import { buildExerciseFuse, searchExercises } from "@/lib/exerciseSearch";
 
 interface AddExerciseModalProps {
   visible: boolean;
@@ -133,31 +134,23 @@ export function AddExerciseModal({
     }
   }, [visible]);
 
+  const exercises = allExercises as Exercise[];
+  const fuse = useMemo(() => buildExerciseFuse(exercises), [exercises]);
+
   const results = useMemo(() => {
-    const exercises = allExercises as Exercise[];
     if (showFavoritesOnly) {
       const favoriteExercises = exercises.filter((e) =>
         favorites.includes(e.id)
       );
-      return searchQuery
-        ? favoriteExercises.filter((e) =>
-            e.name.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-        : favoriteExercises;
-    } else if (searchQuery.trim()) {
-      const lowerQuery = searchQuery.toLowerCase();
-      return exercises
-        .filter(
-          (e) =>
-            e.name.toLowerCase().includes(lowerQuery) ||
-            e.category.toLowerCase().includes(lowerQuery) ||
-            (e.muscleGroups as string[]).some((mg) => mg.toLowerCase().includes(lowerQuery))
-        )
-        .slice(0, 50);
-    } else {
-      return exercises.slice(0, 20);
+      if (!searchQuery.trim()) return favoriteExercises;
+      const favoriteFuse = buildExerciseFuse(favoriteExercises);
+      return searchExercises(favoriteFuse, searchQuery, 50);
     }
-  }, [allExercises, searchQuery, favorites, showFavoritesOnly]);
+    if (searchQuery.trim()) {
+      return searchExercises(fuse, searchQuery, 50);
+    }
+    return exercises.slice(0, 20);
+  }, [exercises, fuse, searchQuery, favorites, showFavoritesOnly]);
 
   const handleCreateExercise = async () => {
     if (!newExerciseName.trim()) return;
