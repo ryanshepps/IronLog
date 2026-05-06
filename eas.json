@@ -3,7 +3,7 @@
     "production": {
       "ios": {
         "buildConfiguration": "Release",
-        "image": "latest"
+        "image": "macos-sequoia-15.6-xcode-26.2"
       },
       "env": {
         "EXPO_PUBLIC_DOMAIN": "ironlog.lastingsoftware.ca"
