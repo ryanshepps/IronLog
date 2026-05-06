@@ -26,6 +26,7 @@ import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { Exercise, ExerciseHistory, UserPreferences } from "@/types/workout";
 import { useExercises, useCreateExercise, useDeleteExercise } from "@/hooks/useExercises";
 import { getAllExerciseHistory, getPreferences } from "@/lib/storage";
+import { buildExerciseFuse, searchExercises } from "@/lib/exerciseSearch";
 
 interface ExerciseWithHistory extends Exercise {
   history?: ExerciseHistory;
@@ -314,12 +315,8 @@ export default function ExercisesScreen() {
     }
 
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      exercises = exercises.filter(
-        (e) =>
-          e.name.toLowerCase().includes(query) ||
-          e.category.toLowerCase().includes(query)
-      );
+      const fuse = buildExerciseFuse(exercises);
+      exercises = searchExercises(fuse, searchQuery, exercises.length);
     }
 
     return exercises;
