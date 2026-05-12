@@ -87,20 +87,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async saveWorkout(workout: InsertWorkout): Promise<Workout> {
+    const normalized = normalizeWorkoutInput(workout);
     const existing = await this.getWorkout(workout.id!, workout.userId);
-    
+
     if (existing) {
       const [updated] = await db
         .update(workouts)
-        .set(workout)
+        .set(normalized)
         .where(eq(workouts.id, workout.id!))
         .returning();
       return updated;
     }
-    
+
     const [created] = await db
       .insert(workouts)
-      .values(workout)
+      .values(normalized)
       .returning();
     return created;
   }
@@ -108,7 +109,7 @@ export class DatabaseStorage implements IStorage {
   async updateWorkout(id: string, userId: string, updates: Partial<Workout>): Promise<Workout | undefined> {
     const [workout] = await db
       .update(workouts)
-      .set(updates)
+      .set(normalizeWorkoutInput(updates))
       .where(and(eq(workouts.id, id), eq(workouts.userId, userId)))
       .returning();
     return workout || undefined;
@@ -252,6 +253,22 @@ export class DatabaseStorage implements IStorage {
 
     return updated;
   }
+}
+
+function toDate(value: unknown): Date | null | undefined {
+  if (value === null) return null;
+  if (value === undefined) return undefined;
+  if (value instanceof Date) return value;
+  if (typeof value === "number" || typeof value === "string") {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}
+
+function normalizeWorkoutInput<T extends { completedAt?: unknown }>(input: T): T {
+  if (!("completedAt" in input)) return input;
+  return { ...input, completedAt: toDate(input.completedAt) } as T;
 }
 
 export const storage = new DatabaseStorage();

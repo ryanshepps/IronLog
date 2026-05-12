@@ -140,11 +140,20 @@ export const workoutExerciseSchema = z.object({
   sets: z.array(workoutSetSchema),
 });
 
+const dateCoerce = z
+  .union([z.number(), z.string(), z.date(), z.null()])
+  .transform((v) => {
+    if (v === null || v === undefined) return null;
+    if (v instanceof Date) return v;
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? null : d;
+  });
+
 export const upsertWorkoutSchema = z.object({
   id: z.string().optional(),
   date: z.string(),
   exercises: z.array(workoutExerciseSchema),
-  completedAt: z.union([z.number(), z.string(), z.null()]).optional(),
+  completedAt: dateCoerce.optional(),
 });
 
 export const exerciseHistoryRecordSchema = z.object({
@@ -153,7 +162,7 @@ export const exerciseHistoryRecordSchema = z.object({
   lastWeight: z.number().nonnegative().optional(),
   lastReps: z.number().int().nonnegative().optional(),
   lastFeeling: z.number().int().min(1).max(10).optional(),
-  lastPerformed: z.union([z.number(), z.string()]).optional(),
+  lastPerformed: dateCoerce.optional(),
   personalRecord: z.number().nonnegative().optional(),
 });
 
