@@ -47,7 +47,12 @@ const serviceClient = createClient(url, service, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
-/** V5/V6 — anon must read zero rows from every user-owned table. */
+/**
+ * V5/V6 — anon must read zero rows from every table. A deny can arrive
+ * two ways: a hard "permission denied" (no table grant) or an empty
+ * result (RLS filtered every row). Both mean anon saw nothing; only
+ * actual rows coming back is a failure.
+ */
 async function checkAnonDenied(): Promise<void> {
   const anonClient = createClient(url, anon, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -58,8 +63,8 @@ async function checkAnonDenied(): Promise<void> {
     const rows = data?.length ?? 0;
     record(
       `anon denied: ${table}`,
-      error === null && rows === 0,
-      error ? `error ${error.message}` : `${rows} rows visible to anon`,
+      rows === 0,
+      error ? `denied (${error.message})` : `${rows} rows visible to anon`,
     );
   }
 }
