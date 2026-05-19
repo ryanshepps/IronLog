@@ -3,6 +3,7 @@ import { View, StyleSheet, FlatList, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useNavigation, useFocusEffect, useIsFocused } from "@react-navigation/native";
@@ -24,6 +25,7 @@ import {
   UserPreferences,
 } from "@/types/workout";
 import { Exercise } from "@/types/workout";
+import type { MainTabParamList } from "@/navigation/MainTabNavigator";
 import {
   getCurrentWorkout,
   saveCurrentWorkout,
@@ -100,7 +102,7 @@ export default function LogScreen() {
   }, []);
 
   useEffect(() => {
-    const parent = navigation.getParent();
+    const parent = navigation.getParent<BottomTabNavigationProp<MainTabParamList>>();
     if (!parent) return;
     const unsub = parent.addListener("tabPress", () => {
       if (isFocused) {
