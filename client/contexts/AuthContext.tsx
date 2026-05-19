@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
-import { apiRequest, getApiUrl } from "@/lib/query-client";
-import { runMigrationV1IfNeeded } from "@/lib/migration";
+import { supabase } from "@/lib/supabase";
+import { getCurrentProfile, upsertCurrentProfile } from "@/lib/profile";
 import { flushQueue } from "@/lib/write-queue";
 
 export interface AuthUser {
@@ -29,20 +29,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const baseUrl = getApiUrl();
-      const res = await fetch(new URL("/api/auth/me", baseUrl), {
-        credentials: "include",
-      });
-      
-      if (res.ok) {
-        const userData = await res.json();
-        setUser(userData);
-        runMigrationV1IfNeeded(userData.id)
-          .then(() => flushQueue())
-          .catch((e) => console.error("Migration error:", e));
-      } else {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data.user) {
         setUser(null);
+        return;
       }
+
+      const profile = await getCurrentProfile(data.user);
+      setUser(profile);
+      flushQueue().catch((e) => console.error("Queue flush error:", e));
     } catch (error) {
       console.error("Error refreshing user:", error);
       setUser(null);
@@ -53,44 +49,80 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refreshUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      setTimeout(() => {
+        refreshUser();
+      }, 0);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [refreshUser]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await apiRequest("POST", "/api/auth/login", { email, password });
-    const userData = await res.json();
-    setUser(userData);
-    runMigrationV1IfNeeded(userData.id).catch((e) =>
-      console.error("Migration error:", e)
-    );
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      throw error;
+    }
+
+    if (data.user) {
+      const profile = await getCurrentProfile(data.user);
+      setUser(profile);
+      flushQueue().catch((e) => console.error("Queue flush error:", e));
+    }
   }, []);
 
   const signup = useCallback(async (email: string, password: string, displayName?: string) => {
-    const res = await apiRequest("POST", "/api/auth/signup", {
+    const name = displayName || "Athlete";
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      displayName: displayName || "Athlete"
+      options: {
+        data: {
+          displayName: name,
+        },
+      },
     });
-    const userData = await res.json();
-    setUser(userData);
-    runMigrationV1IfNeeded(userData.id).catch((e) =>
-      console.error("Migration error:", e)
-    );
+
+    if (error) {
+      throw error;
+    }
+
+    if (data.user && data.session) {
+      const profile = await upsertCurrentProfile(data.user, {
+        displayName: name,
+        units: "lbs",
+      });
+      setUser(profile);
+    }
   }, []);
 
   const logout = useCallback(async () => {
-    try {
-      await apiRequest("POST", "/api/auth/logout");
-    } catch (error) {
-      console.error("Logout error:", error);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw error;
     }
     setUser(null);
   }, []);
 
   const updateProfile = useCallback(async (updates: { displayName?: string; units?: string }) => {
-    const res = await apiRequest("PUT", "/api/auth/profile", updates);
-    const userData = await res.json();
+    const { data, error } = await supabase.auth.getUser();
+
+    if (error || !data.user) {
+      throw error ?? new Error("Not authenticated");
+    }
+
+    const userData = await upsertCurrentProfile(data.user, {
+      displayName: updates.displayName ?? user?.displayName,
+      units: updates.units ?? user?.units,
+    });
     setUser(userData);
-  }, []);
+  }, [user]);
 
   return (
     <AuthContext.Provider
