@@ -24,20 +24,20 @@ Requires Node 22 and `pnpm`. See [`docs/local-development.md`](docs/local-develo
 
 ```bash
 pnpm install
-docker-compose up -d db        # start PostgreSQL
-pnpm db:push                   # apply schema
-pnpm db:seed                   # built-in exercises
-pnpm server:dev                # API on :5000
 pnpm expo:dev                  # Expo dev server
 ```
+
+Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+before starting Expo. The production EAS profile already provides the public
+Supabase values used by TestFlight builds.
 
 ## Project layout
 
 ```
 client/   React Native app
-server/   Express API
-shared/   Drizzle tables + Zod schemas
-scripts/  Database seeds + tooling
+shared/   Zod schemas shared by local tools
+scripts/  One-off owner import/export tooling
+supabase/ Supabase config and SQL migrations
 ```
 
 See [`CLAUDE.md`](CLAUDE.md) for architecture notes and conventions.
