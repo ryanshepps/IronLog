@@ -1,0 +1,36 @@
+diff --git a/dist/index.cjs b/dist/index.cjs
+index 930b92eb0421e4e15eb1cb215cf5c7b3dd280083..750cce6fb0d5639f0502bf5ba8fe01282b8533b4 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -63,9 +63,11 @@ function __awaiter(thisArg, _arguments, P, generator) {
+ //#region ../../shared/tracing/dist/module/extract.js
+ let otelModulePromise = null;
+ const OTEL_PKG = "@opentelemetry/api";
+-const _dynamicImport = new Function("p", "return import(p)");
+ function loadOtel() {
+-	if (otelModulePromise === null) otelModulePromise = _dynamicImport(OTEL_PKG).catch(() => null);
++	// Patched: dynamic import() and new Function() body both rejected by Hermes (React Native).
++	// IronLog does not use @opentelemetry/api; tracing stays disabled. See patches/.
++	if (otelModulePromise === null) otelModulePromise = Promise.resolve(null);
++	void OTEL_PKG;
+ 	return otelModulePromise;
+ }
+ /**
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 61332656d0e2146821718974be2b6e93f6894fc4..887350ae59fd6c2a9d41911d56b628db08cf73f2 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -67,9 +67,11 @@ function __awaiter(thisArg, _arguments, P, generator) {
+ //#region ../../shared/tracing/dist/module/extract.js
+ let otelModulePromise = null;
+ const OTEL_PKG = "@opentelemetry/api";
+-const _dynamicImport = new Function("p", "return import(p)");
+ function loadOtel() {
+-	if (otelModulePromise === null) otelModulePromise = _dynamicImport(OTEL_PKG).catch(() => null);
++	// Patched: dynamic import() and new Function() body both rejected by Hermes (React Native).
++	// IronLog does not use @opentelemetry/api; tracing stays disabled. See patches/.
++	if (otelModulePromise === null) otelModulePromise = Promise.resolve(null);
++	void OTEL_PKG;
+ 	return otelModulePromise;
+ }
+ /**
