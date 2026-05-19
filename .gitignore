@@ -35,7 +35,7 @@ yarn-error.*
 .env
 .env*.local
 
-# local working spec — never commit
+# local working notes — never commit
 SPEC.md
 
 # typescript

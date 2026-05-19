@@ -4,15 +4,15 @@ import { execSync } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
 
 /**
- * Launch security check (SPEC §T21, invariants V5/V6/V7/V11).
+ * Launch security check.
  *
  * Live checks against the configured Supabase project:
- *  - anon (unauthenticated) is denied all user-owned tables (V5/V6)
- *  - a fresh authenticated user sees none of another user's rows (V5)
- *  - builtin exercises are readable but immutable by a normal user (V6)
+ *  - anon (unauthenticated) is denied all user-owned tables
+ *  - a fresh authenticated user sees none of another user's rows
+ *  - builtin exercises are readable but immutable by a normal user
  * Static checks against the repo:
- *  - service role key absent from git-tracked files (V7)
- *  - Express/session/bcrypt/Drizzle runtime removed (V11)
+ *  - service role key absent from git-tracked files
+ *  - Express/session/bcrypt/Drizzle runtime removed
  *
  * The temporary test user is created via the service role and deleted
  * before exit. Exits non-zero if any check fails.
@@ -49,8 +49,8 @@ const serviceClient = createClient(url, service, {
 });
 
 /**
- * V5/V6 — anon must read zero rows from every table. A deny can arrive
- * two ways: a hard "permission denied" (no table grant) or an empty
+ * Anon must read zero rows from every table. A deny can arrive two
+ * ways: a hard "permission denied" (no table grant) or an empty
  * result (RLS filtered every row). Both mean anon saw nothing; only
  * actual rows coming back is a failure.
  */
@@ -70,7 +70,7 @@ async function checkAnonDenied(): Promise<void> {
   }
 }
 
-/** V5/V6 — a fresh authenticated user must not see another user's data. */
+/** A fresh authenticated user must not see another user's data. */
 async function checkCrossUserIsolation(): Promise<void> {
   const email = `seccheck-${Date.now()}@ironlog.invalid`;
   const password = `Sc!${Math.random().toString(36).slice(2)}A9`;
@@ -121,7 +121,7 @@ async function checkCrossUserIsolation(): Promise<void> {
       );
     }
 
-    // V6 — builtin exercises readable; no other user's custom exercises.
+    // builtin exercises readable; no other user's custom exercises.
     const { data: exData, error: exError } = await tempClient
       .from("exercises")
       .select("id,user_id");
@@ -130,17 +130,17 @@ async function checkCrossUserIsolation(): Promise<void> {
       (r) => r.user_id !== null,
     ).length;
     record(
-      "builtin exercises readable (V6)",
+      "builtin exercises readable",
       exError === null && builtin > 0,
       exError ? `error ${exError.message}` : `${builtin} builtin rows visible`,
     );
     record(
-      "other users' custom exercises hidden (V5)",
+      "other users' custom exercises hidden",
       exError === null && foreignCustom === 0,
       `${foreignCustom} foreign custom exercises visible`,
     );
 
-    // V6 — a normal user cannot mutate builtin exercises.
+    // a normal user cannot mutate builtin exercises.
     const { data: builtinRow } = await serviceClient
       .from("exercises")
       .select("id")
@@ -155,20 +155,20 @@ async function checkCrossUserIsolation(): Promise<void> {
         .eq("id", builtinRow.id)
         .select("id");
       record(
-        "builtin exercise immutable (V6)",
+        "builtin exercise immutable",
         (updated?.length ?? 0) === 0,
         `${updated?.length ?? 0} builtin rows updated by normal user`,
       );
     }
 
-    // V5 — a normal user cannot insert rows owned by someone else.
+    // a normal user cannot insert rows owned by someone else.
     const { error: spoofError } = await tempClient.from("workouts").insert({
       id: `sec-${Date.now()}`,
       user_id: FOREIGN_USER_ID,
       date: "2026-01-01",
     });
     record(
-      "cannot spoof user_id on insert (V5)",
+      "cannot spoof user_id on insert",
       spoofError !== null,
       spoofError ? `rejected: ${spoofError.message}` : "insert SUCCEEDED",
     );
@@ -183,7 +183,7 @@ async function checkCrossUserIsolation(): Promise<void> {
   }
 }
 
-/** V7 — the service role key must not appear in any git-tracked file. */
+/** The service role key must not appear in any git-tracked file. */
 function checkServiceKeyAbsent(): void {
   const tracked = execSync("git ls-files", { encoding: "utf8" })
     .split("\n")
@@ -202,19 +202,19 @@ function checkServiceKeyAbsent(): void {
     }
   }
   record(
-    "service role key absent from tracked files (V7)",
+    "service role key absent from tracked files",
     leaks.length === 0,
     leaks.length === 0 ? "no leak" : `leaked in: ${leaks.join(", ")}`,
   );
 }
 
-/** V11 — Express/session/bcrypt/Drizzle runtime removed. */
+/** Express/session/bcrypt/Drizzle runtime removed. */
 function checkBackendRemoved(): void {
   const pkg = readFileSync("package.json", "utf8");
   const banned = ["express", "express-session", "bcrypt", "drizzle-orm"];
   const present = banned.filter((dep) => new RegExp(`"${dep}"\\s*:`).test(pkg));
   record(
-    "backend runtime removed (V11)",
+    "backend runtime removed",
     present.length === 0,
     present.length === 0
       ? "no banned deps"
