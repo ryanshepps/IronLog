@@ -5,7 +5,17 @@ import { Typography } from "@/constants/theme";
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
-  type?: "hero" | "h1" | "h2" | "h3" | "h4" | "bodyLarge" | "body" | "small" | "caption" | "link";
+  type?:
+    | "hero"
+    | "h1"
+    | "h2"
+    | "h3"
+    | "h4"
+    | "bodyLarge"
+    | "body"
+    | "small"
+    | "caption"
+    | "link";
 };
 
 export function ThemedText({

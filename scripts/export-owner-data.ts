@@ -50,12 +50,20 @@ async function main() {
     throw new Error("No owner user found in old Postgres database");
   }
 
-  const [workouts, favorites, exerciseHistory, customExercises] = await Promise.all([
-    pool.query("select * from workouts where user_id = $1 order by date desc", [owner.id]),
-    pool.query("select * from favorites where user_id = $1", [owner.id]),
-    pool.query("select * from exercise_history where user_id = $1", [owner.id]),
-    pool.query("select * from exercises where user_id = $1 order by name", [owner.id]),
-  ]);
+  const [workouts, favorites, exerciseHistory, customExercises] =
+    await Promise.all([
+      pool.query(
+        "select * from workouts where user_id = $1 order by date desc",
+        [owner.id],
+      ),
+      pool.query("select * from favorites where user_id = $1", [owner.id]),
+      pool.query("select * from exercise_history where user_id = $1", [
+        owner.id,
+      ]),
+      pool.query("select * from exercises where user_id = $1 order by name", [
+        owner.id,
+      ]),
+    ]);
 
   const data: OwnerExport = {
     user: {

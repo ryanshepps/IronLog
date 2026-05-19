@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from "react";
 import { supabase } from "@/lib/supabase";
 import { getCurrentProfile, upsertCurrentProfile } from "@/lib/profile";
 import { flushQueue } from "@/lib/write-queue";
@@ -15,9 +22,16 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, displayName?: string) => Promise<void>;
+  signup: (
+    email: string,
+    password: string,
+    displayName?: string,
+  ) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (updates: { displayName?: string; units?: string }) => Promise<void>;
+  updateProfile: (updates: {
+    displayName?: string;
+    units?: string;
+  }) => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -64,7 +78,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshUser]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (error) {
       throw error;
@@ -77,30 +94,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const signup = useCallback(async (email: string, password: string, displayName?: string) => {
-    const name = displayName || "Athlete";
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          displayName: name,
+  const signup = useCallback(
+    async (email: string, password: string, displayName?: string) => {
+      const name = displayName || "Athlete";
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            displayName: name,
+          },
         },
-      },
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    if (data.user && data.session) {
-      const profile = await upsertCurrentProfile(data.user, {
-        displayName: name,
-        units: "lbs",
       });
-      setUser(profile);
-    }
-  }, []);
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user && data.session) {
+        const profile = await upsertCurrentProfile(data.user, {
+          displayName: name,
+          units: "lbs",
+        });
+        setUser(profile);
+      }
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
@@ -110,19 +130,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  const updateProfile = useCallback(async (updates: { displayName?: string; units?: string }) => {
-    const { data, error } = await supabase.auth.getUser();
+  const updateProfile = useCallback(
+    async (updates: { displayName?: string; units?: string }) => {
+      const { data, error } = await supabase.auth.getUser();
 
-    if (error || !data.user) {
-      throw error ?? new Error("Not authenticated");
-    }
+      if (error || !data.user) {
+        throw error ?? new Error("Not authenticated");
+      }
 
-    const userData = await upsertCurrentProfile(data.user, {
-      displayName: updates.displayName ?? user?.displayName,
-      units: updates.units ?? user?.units,
-    });
-    setUser(userData);
-  }, [user]);
+      const userData = await upsertCurrentProfile(data.user, {
+        displayName: updates.displayName ?? user?.displayName,
+        units: updates.units ?? user?.units,
+      });
+      setUser(userData);
+    },
+    [user],
+  );
 
   return (
     <AuthContext.Provider

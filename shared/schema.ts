@@ -33,6 +33,8 @@ export const exerciseHistoryRecordSchema = z.object({
   lastWeight: z.number().nonnegative().optional(),
   lastReps: z.number().int().nonnegative().optional(),
   lastFeeling: z.number().int().min(1).max(10).optional(),
-  lastPerformed: z.union([z.number(), z.string(), z.date(), z.null()]).optional(),
+  lastPerformed: z
+    .union([z.number(), z.string(), z.date(), z.null()])
+    .optional(),
   personalRecord: z.number().nonnegative().optional(),
 });

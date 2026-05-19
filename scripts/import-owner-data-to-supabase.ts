@@ -85,7 +85,11 @@ function assertExerciseId(value: string | undefined): string {
   return value;
 }
 
-async function upsertOrThrow(table: string, rows: unknown[], onConflict: string) {
+async function upsertOrThrow(
+  table: string,
+  rows: unknown[],
+  onConflict: string,
+) {
   if (rows.length === 0) return;
 
   const { error } = await supabase.from(table).upsert(rows, { onConflict });
@@ -95,7 +99,9 @@ async function upsertOrThrow(table: string, rows: unknown[], onConflict: string)
 }
 
 async function main() {
-  const data = JSON.parse(await readFile(ownerExportPath, "utf8")) as OwnerExport;
+  const data = JSON.parse(
+    await readFile(ownerExportPath, "utf8"),
+  ) as OwnerExport;
 
   await upsertOrThrow(
     "profiles",
@@ -138,7 +144,9 @@ async function main() {
     "favorites",
     data.favorites.map((favorite) => ({
       user_id: ownerUserId,
-      exercise_id: assertExerciseId(favorite.exercise_id ?? favorite.exerciseId),
+      exercise_id: assertExerciseId(
+        favorite.exercise_id ?? favorite.exerciseId,
+      ),
     })),
     "user_id,exercise_id",
   );

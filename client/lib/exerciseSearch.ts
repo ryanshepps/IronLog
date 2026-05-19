@@ -21,7 +21,7 @@ export function buildExerciseFuse(exercises: Exercise[]): Fuse<Exercise> {
 export function searchExercises(
   fuse: Fuse<Exercise>,
   query: string,
-  limit = 50
+  limit = 50,
 ): Exercise[] {
   const trimmed = query.trim();
   if (!trimmed) return [];

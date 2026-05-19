@@ -36,7 +36,11 @@ export default function SignupScreen() {
     setIsLoading(true);
 
     try {
-      await signup(email.trim().toLowerCase(), password, displayName.trim() || undefined);
+      await signup(
+        email.trim().toLowerCase(),
+        password,
+        displayName.trim() || undefined,
+      );
     } catch (err: any) {
       const message = err?.message || "Signup failed";
       if (message.includes("400") && message.includes("Email")) {
@@ -56,10 +60,15 @@ export default function SignupScreen() {
       error={error}
       footer={
         <>
-          <ThemedText style={[authStyles.footerText, { color: theme.textSecondary }]}>
+          <ThemedText
+            style={[authStyles.footerText, { color: theme.textSecondary }]}
+          >
             Already have an account?
           </ThemedText>
-          <Pressable onPress={() => navigation.navigate("Login")} testID="button-go-login">
+          <Pressable
+            onPress={() => navigation.navigate("Login")}
+            testID="button-go-login"
+          >
             <ThemedText style={[authStyles.linkText, { color: theme.primary }]}>
               Log In
             </ThemedText>
@@ -68,7 +77,9 @@ export default function SignupScreen() {
       }
     >
       <View style={authStyles.inputGroup}>
-        <ThemedText style={authStyles.label}>Display Name (optional)</ThemedText>
+        <ThemedText style={authStyles.label}>
+          Display Name (optional)
+        </ThemedText>
         <TextInput
           style={[
             authStyles.input,

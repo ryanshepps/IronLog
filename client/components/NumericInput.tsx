@@ -72,10 +72,18 @@ export function NumericInput({
 
   return (
     <View style={styles.container}>
-      <ThemedText type="small" style={[styles.label, { color: theme.textSecondary }]}>
+      <ThemedText
+        type="small"
+        style={[styles.label, { color: theme.textSecondary }]}
+      >
         {label}
       </ThemedText>
-      <View style={[styles.inputContainer, { backgroundColor: theme.backgroundSecondary }]}>
+      <View
+        style={[
+          styles.inputContainer,
+          { backgroundColor: theme.backgroundSecondary },
+        ]}
+      >
         <Pressable
           onPress={handleDecrement}
           style={({ pressed }) => [

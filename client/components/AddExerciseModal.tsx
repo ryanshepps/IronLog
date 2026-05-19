@@ -140,7 +140,7 @@ export function AddExerciseModal({
   const results = useMemo(() => {
     if (showFavoritesOnly) {
       const favoriteExercises = exercises.filter((e) =>
-        favorites.includes(e.id)
+        favorites.includes(e.id),
       );
       if (!searchQuery.trim()) return favoriteExercises;
       const favoriteFuse = buildExerciseFuse(favoriteExercises);
@@ -163,7 +163,7 @@ export function AddExerciseModal({
           setNewExerciseName("");
           onSelectExercise(exercise as Exercise);
         },
-      }
+      },
     );
   };
 
@@ -278,7 +278,10 @@ export function AddExerciseModal({
                 onPress={handleCreateExercise}
                 disabled={!newExerciseName.trim()}
               >
-                <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+                <ThemedText
+                  type="body"
+                  style={{ color: "#FFFFFF", fontWeight: "600" }}
+                >
                   Create & Add
                 </ThemedText>
               </Pressable>

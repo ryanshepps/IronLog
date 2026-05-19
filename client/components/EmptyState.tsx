@@ -11,7 +11,12 @@ interface EmptyStateProps {
   action?: React.ReactNode;
 }
 
-export function EmptyState({ image, title, subtitle, action }: EmptyStateProps) {
+export function EmptyState({
+  image,
+  title,
+  subtitle,
+  action,
+}: EmptyStateProps) {
   const { theme } = useTheme();
 
   return (

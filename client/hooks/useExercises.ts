@@ -19,7 +19,11 @@ export function useExercises() {
 export function useCreateExercise() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { name: string; category: string; muscleGroups?: string[] }) => {
+    mutationFn: async (data: {
+      name: string;
+      category: string;
+      muscleGroups?: string[];
+    }) => {
       return createRemoteExercise(data);
     },
     onSuccess: () => {

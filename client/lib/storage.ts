@@ -46,7 +46,7 @@ async function readCache<T>(key: string, fallback: T): Promise<T> {
 async function cachedRead<TLocal>(
   key: string,
   readRemote: () => Promise<TLocal>,
-  fallback: TLocal
+  fallback: TLocal,
 ): Promise<TLocal> {
   try {
     const value = await readRemote();
@@ -62,11 +62,7 @@ export async function getWorkoutsFromCache(): Promise<Workout[]> {
 }
 
 export async function getWorkouts(): Promise<Workout[]> {
-  return cachedRead<Workout[]>(
-    KEYS.WORKOUTS,
-    getRemoteWorkouts,
-    []
-  );
+  return cachedRead<Workout[]>(KEYS.WORKOUTS, getRemoteWorkouts, []);
 }
 
 export async function saveWorkout(workout: Workout): Promise<void> {
@@ -104,7 +100,9 @@ export async function getCurrentWorkout(): Promise<Workout | null> {
   }
 }
 
-export async function saveCurrentWorkout(workout: Workout | null): Promise<void> {
+export async function saveCurrentWorkout(
+  workout: Workout | null,
+): Promise<void> {
   return withMutation("saving current workout", async () => {
     if (workout) {
       await AsyncStorage.setItem(KEYS.CURRENT_WORKOUT, JSON.stringify(workout));
@@ -119,11 +117,7 @@ export async function getFavoritesFromCache(): Promise<string[]> {
 }
 
 export async function getFavorites(): Promise<string[]> {
-  return cachedRead<string[]>(
-    KEYS.FAVORITES,
-    getRemoteFavorites,
-    []
-  );
+  return cachedRead<string[]>(KEYS.FAVORITES, getRemoteFavorites, []);
 }
 
 export async function addFavorite(exerciseId: string): Promise<void> {
@@ -149,7 +143,7 @@ export async function removeFavorite(exerciseId: string): Promise<void> {
 export async function toggleFavorite(exerciseId: string): Promise<boolean> {
   const favorites = await getFavorites();
   const isFavorite = favorites.includes(exerciseId);
-  
+
   if (isFavorite) {
     await removeFavorite(exerciseId);
     return false;
@@ -159,27 +153,33 @@ export async function toggleFavorite(exerciseId: string): Promise<boolean> {
   }
 }
 
-export async function getAllExerciseHistoryFromCache(): Promise<Record<string, ExerciseHistory>> {
+export async function getAllExerciseHistoryFromCache(): Promise<
+  Record<string, ExerciseHistory>
+> {
   return readCache<Record<string, ExerciseHistory>>(KEYS.EXERCISE_HISTORY, {});
 }
 
-export async function getExerciseHistory(exerciseId: string): Promise<ExerciseHistory | null> {
+export async function getExerciseHistory(
+  exerciseId: string,
+): Promise<ExerciseHistory | null> {
   const map = await getAllExerciseHistory();
   return map[exerciseId] || null;
 }
 
-export async function getAllExerciseHistory(): Promise<Record<string, ExerciseHistory>> {
+export async function getAllExerciseHistory(): Promise<
+  Record<string, ExerciseHistory>
+> {
   return cachedRead<Record<string, ExerciseHistory>>(
     KEYS.EXERCISE_HISTORY,
     getRemoteExerciseHistory,
-    {}
+    {},
   );
 }
 
 export async function updateExerciseHistory(
   exerciseId: string,
   exerciseName: string,
-  set: WorkoutSet
+  set: WorkoutSet,
 ): Promise<void> {
   return withMutation("updating exercise history", async () => {
     const historyMap = await getAllExerciseHistoryFromCache();
@@ -198,7 +198,10 @@ export async function updateExerciseHistory(
     };
     historyMap[exerciseId] = record;
 
-    await AsyncStorage.setItem(KEYS.EXERCISE_HISTORY, JSON.stringify(historyMap));
+    await AsyncStorage.setItem(
+      KEYS.EXERCISE_HISTORY,
+      JSON.stringify(historyMap),
+    );
     pushOrQueue({ type: "upsertExerciseHistory", record }).catch(() => {});
   });
 }
@@ -206,14 +209,18 @@ export async function updateExerciseHistory(
 export async function getPreferences(): Promise<UserPreferences> {
   try {
     const data = await AsyncStorage.getItem(KEYS.PREFERENCES);
-    return data ? { ...DEFAULT_PREFERENCES, ...JSON.parse(data) } : DEFAULT_PREFERENCES;
+    return data
+      ? { ...DEFAULT_PREFERENCES, ...JSON.parse(data) }
+      : DEFAULT_PREFERENCES;
   } catch (error) {
     console.error("Error getting preferences:", error);
     return DEFAULT_PREFERENCES;
   }
 }
 
-export async function savePreferences(preferences: Partial<UserPreferences>): Promise<void> {
+export async function savePreferences(
+  preferences: Partial<UserPreferences>,
+): Promise<void> {
   return withMutation("saving preferences", async () => {
     const current = await getPreferences();
     const updated = { ...current, ...preferences };
@@ -223,7 +230,7 @@ export async function savePreferences(preferences: Partial<UserPreferences>): Pr
 
 export async function getWorkoutsByDateRange(
   startDate: string,
-  endDate: string
+  endDate: string,
 ): Promise<Workout[]> {
   const workouts = await getWorkouts();
   return workouts.filter((w) => w.date >= startDate && w.date <= endDate);
@@ -253,30 +260,32 @@ export interface ExercisePerformanceEntry {
 }
 
 export async function getExercisePerformanceHistory(
-  exerciseId: string
+  exerciseId: string,
 ): Promise<ExercisePerformanceEntry[]> {
   try {
     const workouts = await getWorkouts();
     const currentWorkout = await getCurrentWorkout();
-    
-    const allWorkouts = currentWorkout 
-      ? [currentWorkout, ...workouts.filter(w => w.id !== currentWorkout.id)]
+
+    const allWorkouts = currentWorkout
+      ? [currentWorkout, ...workouts.filter((w) => w.id !== currentWorkout.id)]
       : workouts;
-    
+
     const entries: ExercisePerformanceEntry[] = [];
-    
+
     for (const workout of allWorkouts) {
-      const exercise = workout.exercises.find(e => e.exerciseId === exerciseId);
+      const exercise = workout.exercises.find(
+        (e) => e.exerciseId === exerciseId,
+      );
       if (exercise && exercise.sets.length > 0) {
         const sets = exercise.sets;
         const totalVolume = sets.reduce((acc, s) => acc + s.weight * s.reps, 0);
-        const bestWeight = Math.max(...sets.map(s => s.weight));
-        
+        const bestWeight = Math.max(...sets.map((s) => s.weight));
+
         entries.push({
           date: workout.date,
           timestamp: sets[0].timestamp,
           totalVolume,
-          sets: sets.map(s => ({
+          sets: sets.map((s) => ({
             weight: s.weight,
             reps: s.reps,
             feeling: s.feeling,
@@ -285,10 +294,12 @@ export async function getExercisePerformanceHistory(
         });
       }
     }
-    
+
     // Sort by date descending (most recent first)
-    entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
+    entries.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+
     return entries;
   } catch (error) {
     console.error("Error getting exercise performance history:", error);

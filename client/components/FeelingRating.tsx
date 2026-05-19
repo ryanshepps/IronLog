@@ -148,7 +148,8 @@ export function FeelingDots({
               width: dotSize,
               height: dotSize,
               borderRadius: dotSize / 2,
-              backgroundColor: i <= feeling ? getColor() : theme.backgroundSecondary,
+              backgroundColor:
+                i <= feeling ? getColor() : theme.backgroundSecondary,
             },
           ]}
         />

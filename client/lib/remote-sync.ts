@@ -91,7 +91,10 @@ export async function upsertRemoteWorkout(workout: Workout): Promise<void> {
 }
 
 export async function deleteRemoteWorkout(workoutId: string): Promise<void> {
-  const { error } = await supabase.from("workouts").delete().eq("id", workoutId);
+  const { error } = await supabase
+    .from("workouts")
+    .delete()
+    .eq("id", workoutId);
   if (error) throw error;
 }
 
@@ -122,7 +125,9 @@ export async function removeRemoteFavorite(exerciseId: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function getRemoteExerciseHistory(): Promise<Record<string, ExerciseHistory>> {
+export async function getRemoteExerciseHistory(): Promise<
+  Record<string, ExerciseHistory>
+> {
   const { data, error } = await supabase
     .from("exercise_history")
     .select(
@@ -139,7 +144,9 @@ export async function getRemoteExerciseHistory(): Promise<Record<string, Exercis
   return history;
 }
 
-export async function upsertRemoteExerciseHistory(record: ExerciseHistory): Promise<void> {
+export async function upsertRemoteExerciseHistory(
+  record: ExerciseHistory,
+): Promise<void> {
   const { error } = await supabase.from("exercise_history").upsert(
     {
       exercise_id: record.exerciseId,

@@ -48,7 +48,9 @@ export function LogSetModal({
   const [reps, setReps] = useState(0);
   const [feeling, setFeeling] = useState(5);
   const [showHistory, setShowHistory] = useState(false);
-  const [lastSessionAvgFeeling, setLastSessionAvgFeeling] = useState<number | null>(null);
+  const [lastSessionAvgFeeling, setLastSessionAvgFeeling] = useState<
+    number | null
+  >(null);
 
   useEffect(() => {
     if (!visible || !exerciseId) {
@@ -58,9 +60,12 @@ export function LogSetModal({
     let cancelled = false;
     getExercisePerformanceHistory(exerciseId).then((entries) => {
       if (cancelled) return;
-      const prev = entries.find((e) => e.sets.length > 0 && e.timestamp !== editingSet?.timestamp);
+      const prev = entries.find(
+        (e) => e.sets.length > 0 && e.timestamp !== editingSet?.timestamp,
+      );
       if (prev && prev.sets.length > 0) {
-        const avg = prev.sets.reduce((a, s) => a + s.feeling, 0) / prev.sets.length;
+        const avg =
+          prev.sets.reduce((a, s) => a + s.feeling, 0) / prev.sets.length;
         setLastSessionAvgFeeling(avg);
       } else {
         setLastSessionAvgFeeling(null);
@@ -140,8 +145,8 @@ export function LogSetModal({
           <ThemedText type="h4" numberOfLines={1} style={styles.headerTitle}>
             {exerciseName}
           </ThemedText>
-          <Pressable 
-            onPress={() => setShowHistory(true)} 
+          <Pressable
+            onPress={() => setShowHistory(true)}
             hitSlop={12}
             style={styles.historyButton}
           >
@@ -149,7 +154,7 @@ export function LogSetModal({
           </Pressable>
         </View>
 
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
@@ -184,9 +189,15 @@ export function LogSetModal({
                         {index + 1}.
                       </ThemedText>
                       <ThemedText type="body">
-                        {set.weight}{units} x {set.reps} @ {set.feeling}/10
+                        {set.weight}
+                        {units} x {set.reps} @ {set.feeling}/10
                       </ThemedText>
-                      <Feather name="x" size={14} color={theme.textSecondary} style={{ marginLeft: Spacing.xs }} />
+                      <Feather
+                        name="x"
+                        size={14}
+                        color={theme.textSecondary}
+                        style={{ marginLeft: Spacing.xs }}
+                      />
                     </Animated.View>
                   </Pressable>
                 ))}
@@ -204,7 +215,11 @@ export function LogSetModal({
               <Feather name="trending-up" size={18} color={theme.feelingEasy} />
               <ThemedText
                 type="small"
-                style={{ color: theme.feelingEasy, flex: 1, marginLeft: Spacing.sm }}
+                style={{
+                  color: theme.feelingEasy,
+                  flex: 1,
+                  marginLeft: Spacing.sm,
+                }}
               >
                 Last set felt easy! Consider increasing weight.
               </ThemedText>
@@ -271,7 +286,9 @@ export function LogSetModal({
           ) : null}
         </ScrollView>
 
-        <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}>
+        <View
+          style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}
+        >
           {editingSet ? (
             <Pressable
               onPress={handleSaveAndClose}

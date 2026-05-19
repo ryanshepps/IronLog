@@ -20,7 +20,13 @@ interface AuthScreenProps {
   footer?: ReactNode;
 }
 
-export function AuthScreen({ title, subtitle, error, children, footer }: AuthScreenProps) {
+export function AuthScreen({
+  title,
+  subtitle,
+  error,
+  children,
+  footer,
+}: AuthScreenProps) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -42,15 +48,24 @@ export function AuthScreen({ title, subtitle, error, children, footer }: AuthScr
         >
           <View style={authStyles.header}>
             <ThemedText style={authStyles.title}>{title}</ThemedText>
-            <ThemedText style={[authStyles.subtitle, { color: theme.textSecondary }]}>
+            <ThemedText
+              style={[authStyles.subtitle, { color: theme.textSecondary }]}
+            >
               {subtitle}
             </ThemedText>
           </View>
 
           <View style={authStyles.form}>
             {error ? (
-              <View style={[authStyles.errorBox, { backgroundColor: theme.primary + "20" }]}>
-                <ThemedText style={[authStyles.errorText, { color: theme.primary }]}>
+              <View
+                style={[
+                  authStyles.errorBox,
+                  { backgroundColor: theme.primary + "20" },
+                ]}
+              >
+                <ThemedText
+                  style={[authStyles.errorText, { color: theme.primary }]}
+                >
                   {error}
                 </ThemedText>
               </View>

@@ -50,10 +50,15 @@ export default function LoginScreen() {
       error={error}
       footer={
         <>
-          <ThemedText style={[authStyles.footerText, { color: theme.textSecondary }]}>
-            Don't have an account?
+          <ThemedText
+            style={[authStyles.footerText, { color: theme.textSecondary }]}
+          >
+            Don&apos;t have an account?
           </ThemedText>
-          <Pressable onPress={() => navigation.navigate("Signup")} testID="button-go-signup">
+          <Pressable
+            onPress={() => navigation.navigate("Signup")}
+            testID="button-go-signup"
+          >
             <ThemedText style={[authStyles.linkText, { color: theme.primary }]}>
               Sign Up
             </ThemedText>
