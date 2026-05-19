@@ -37,6 +37,8 @@ yarn-error.*
 
 # local working notes — never commit
 SPEC.md
+docs/plans/
+docs/qa/
 
 # typescript
 *.tsbuildinfo
