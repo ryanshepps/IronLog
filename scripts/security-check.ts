@@ -8,7 +8,7 @@ import { createClient } from "@supabase/supabase-js";
  *
  * Live checks against the configured Supabase project:
  *  - anon (unauthenticated) is denied all user-owned tables (V5/V6)
- *  - a second authenticated user sees none of the owner's rows (V5)
+ *  - a fresh authenticated user sees none of another user's rows (V5)
  *  - builtin exercises are readable but immutable by a normal user (V6)
  * Static checks against the repo:
  *  - service role key absent from git-tracked files (V7)
@@ -21,18 +21,19 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const anonKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-const ownerUserId = process.env.OWNER_USER_ID;
 
 if (!supabaseUrl) throw new Error("SUPABASE_URL is required");
 if (!serviceRoleKey) throw new Error("SUPABASE_SERVICE_ROLE_KEY is required");
 if (!anonKey)
   throw new Error("EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY is required");
-if (!ownerUserId) throw new Error("OWNER_USER_ID is required");
 
 const url = supabaseUrl;
 const service = serviceRoleKey;
 const anon = anonKey;
-const owner = ownerUserId;
+
+// A user id that is never the temp test user — used to prove a normal
+// user cannot insert rows attributed to someone else.
+const FOREIGN_USER_ID = "00000000-0000-0000-0000-000000000000";
 
 const USER_TABLES = ["profiles", "workouts", "favorites", "exercise_history"];
 
@@ -69,7 +70,7 @@ async function checkAnonDenied(): Promise<void> {
   }
 }
 
-/** V5/V6 — a fresh authenticated user must not see the owner's data. */
+/** V5/V6 — a fresh authenticated user must not see another user's data. */
 async function checkCrossUserIsolation(): Promise<void> {
   const email = `seccheck-${Date.now()}@ironlog.invalid`;
   const password = `Sc!${Math.random().toString(36).slice(2)}A9`;
@@ -116,17 +117,17 @@ async function checkCrossUserIsolation(): Promise<void> {
       record(
         `cross-user isolation: ${table}`,
         error === null && rows === 0,
-        error ? `error ${error.message}` : `${rows} of owner's rows visible`,
+        error ? `error ${error.message}` : `${rows} other-user rows visible`,
       );
     }
 
-    // V6 — builtin exercises readable, owner's custom exercises not.
+    // V6 — builtin exercises readable; no other user's custom exercises.
     const { data: exData, error: exError } = await tempClient
       .from("exercises")
       .select("id,user_id");
     const builtin = (exData ?? []).filter((r) => r.user_id === null).length;
-    const ownerCustom = (exData ?? []).filter(
-      (r) => r.user_id === owner,
+    const foreignCustom = (exData ?? []).filter(
+      (r) => r.user_id !== null,
     ).length;
     record(
       "builtin exercises readable (V6)",
@@ -134,9 +135,9 @@ async function checkCrossUserIsolation(): Promise<void> {
       exError ? `error ${exError.message}` : `${builtin} builtin rows visible`,
     );
     record(
-      "owner custom exercises hidden (V5)",
-      exError === null && ownerCustom === 0,
-      `${ownerCustom} of owner's custom exercises visible`,
+      "other users' custom exercises hidden (V5)",
+      exError === null && foreignCustom === 0,
+      `${foreignCustom} foreign custom exercises visible`,
     );
 
     // V6 — a normal user cannot mutate builtin exercises.
@@ -161,9 +162,11 @@ async function checkCrossUserIsolation(): Promise<void> {
     }
 
     // V5 — a normal user cannot insert rows owned by someone else.
-    const { error: spoofError } = await tempClient
-      .from("workouts")
-      .insert({ id: `sec-${Date.now()}`, user_id: owner, date: "2026-01-01" });
+    const { error: spoofError } = await tempClient.from("workouts").insert({
+      id: `sec-${Date.now()}`,
+      user_id: FOREIGN_USER_ID,
+      date: "2026-01-01",
+    });
     record(
       "cannot spoof user_id on insert (V5)",
       spoofError !== null,
