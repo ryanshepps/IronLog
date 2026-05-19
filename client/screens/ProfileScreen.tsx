@@ -184,7 +184,7 @@ export default function ProfileScreen() {
     try {
       await updateProfile({ units: newUnits });
     } catch (error) {
-      console.error("Failed to sync units to server:", error);
+      console.error("Failed to sync units to Supabase:", error);
     }
   };
 
