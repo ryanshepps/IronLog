@@ -6,63 +6,15 @@ import {
   UserPreferences,
   DEFAULT_PREFERENCES,
 } from "@/types/workout";
-import { apiRequest } from "@/lib/query-client";
 import { pushOrQueue } from "@/lib/write-queue";
+import {
+  getRemoteExerciseHistory,
+  getRemoteFavorites,
+  getRemoteWorkouts,
+} from "@/lib/remote-sync";
 
 export { formatDateLocal } from "@/lib/date";
 import { formatDateLocal } from "@/lib/date";
-
-function toMs(value: unknown): number {
-  if (typeof value === "number") return value;
-  if (typeof value === "string") {
-    const parsed = Date.parse(value);
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }
-  return 0;
-}
-
-interface RawWorkout {
-  id: string;
-  date: string;
-  exercises?: Workout["exercises"];
-  completedAt?: string | number | null;
-}
-
-interface RawHistoryRecord {
-  exerciseId: string;
-  exerciseName: string;
-  lastWeight?: number | null;
-  lastReps?: number | null;
-  lastFeeling?: number | null;
-  lastPerformed?: string | number | null;
-  personalRecord?: number | null;
-}
-
-function normalizeWorkout(raw: RawWorkout): Workout {
-  return {
-    id: raw.id,
-    date: raw.date,
-    exercises: raw.exercises ?? [],
-    completedAt: raw.completedAt ? toMs(raw.completedAt) : undefined,
-  };
-}
-
-function normalizeHistoryRecord(raw: RawHistoryRecord): ExerciseHistory {
-  return {
-    exerciseId: raw.exerciseId,
-    exerciseName: raw.exerciseName,
-    lastWeight: raw.lastWeight ?? 0,
-    lastReps: raw.lastReps ?? 0,
-    lastFeeling: raw.lastFeeling ?? 5,
-    lastPerformed: toMs(raw.lastPerformed),
-    personalRecord: raw.personalRecord ?? 0,
-  };
-}
-
-async function fetchJSON<T>(path: string): Promise<T> {
-  const res = await apiRequest("GET", path);
-  return (await res.json()) as T;
-}
 
 const KEYS = {
   WORKOUTS: "@ironlog/workouts",
@@ -91,15 +43,13 @@ async function readCache<T>(key: string, fallback: T): Promise<T> {
   }
 }
 
-async function cachedRead<TRemote, TLocal>(
+async function cachedRead<TLocal>(
   key: string,
-  path: string,
-  transform: (remote: TRemote) => TLocal,
+  readRemote: () => Promise<TLocal>,
   fallback: TLocal
 ): Promise<TLocal> {
   try {
-    const remote = await fetchJSON<TRemote>(path);
-    const value = transform(remote);
+    const value = await readRemote();
     await AsyncStorage.setItem(key, JSON.stringify(value));
     return value;
   } catch {
@@ -112,10 +62,9 @@ export async function getWorkoutsFromCache(): Promise<Workout[]> {
 }
 
 export async function getWorkouts(): Promise<Workout[]> {
-  return cachedRead<RawWorkout[], Workout[]>(
+  return cachedRead<Workout[]>(
     KEYS.WORKOUTS,
-    "/api/workouts",
-    (remote) => remote.map(normalizeWorkout),
+    getRemoteWorkouts,
     []
   );
 }
@@ -132,7 +81,7 @@ export async function saveWorkout(workout: Workout): Promise<void> {
     }
 
     await AsyncStorage.setItem(KEYS.WORKOUTS, JSON.stringify(workouts));
-    pushOrQueue("POST", "/api/workouts", workout).catch(() => {});
+    pushOrQueue({ type: "upsertWorkout", workout }).catch(() => {});
   });
 }
 
@@ -141,7 +90,7 @@ export async function deleteWorkout(workoutId: string): Promise<void> {
     const workouts = await getWorkoutsFromCache();
     const filtered = workouts.filter((w) => w.id !== workoutId);
     await AsyncStorage.setItem(KEYS.WORKOUTS, JSON.stringify(filtered));
-    pushOrQueue("DELETE", `/api/workouts/${workoutId}`).catch(() => {});
+    pushOrQueue({ type: "deleteWorkout", workoutId }).catch(() => {});
   });
 }
 
@@ -170,10 +119,9 @@ export async function getFavoritesFromCache(): Promise<string[]> {
 }
 
 export async function getFavorites(): Promise<string[]> {
-  return cachedRead<string[], string[]>(
+  return cachedRead<string[]>(
     KEYS.FAVORITES,
-    "/api/favorites",
-    (remote) => remote,
+    getRemoteFavorites,
     []
   );
 }
@@ -185,7 +133,7 @@ export async function addFavorite(exerciseId: string): Promise<void> {
       favorites.unshift(exerciseId);
       await AsyncStorage.setItem(KEYS.FAVORITES, JSON.stringify(favorites));
     }
-    pushOrQueue("POST", `/api/favorites/${exerciseId}`).catch(() => {});
+    pushOrQueue({ type: "addFavorite", exerciseId }).catch(() => {});
   });
 }
 
@@ -194,7 +142,7 @@ export async function removeFavorite(exerciseId: string): Promise<void> {
     const favorites = await getFavoritesFromCache();
     const filtered = favorites.filter((id) => id !== exerciseId);
     await AsyncStorage.setItem(KEYS.FAVORITES, JSON.stringify(filtered));
-    pushOrQueue("DELETE", `/api/favorites/${exerciseId}`).catch(() => {});
+    pushOrQueue({ type: "removeFavorite", exerciseId }).catch(() => {});
   });
 }
 
@@ -221,17 +169,9 @@ export async function getExerciseHistory(exerciseId: string): Promise<ExerciseHi
 }
 
 export async function getAllExerciseHistory(): Promise<Record<string, ExerciseHistory>> {
-  return cachedRead<RawHistoryRecord[], Record<string, ExerciseHistory>>(
+  return cachedRead<Record<string, ExerciseHistory>>(
     KEYS.EXERCISE_HISTORY,
-    "/api/exercise-history",
-    (remote) => {
-      const map: Record<string, ExerciseHistory> = {};
-      for (const r of remote) {
-        const norm = normalizeHistoryRecord(r);
-        map[norm.exerciseId] = norm;
-      }
-      return map;
-    },
+    getRemoteExerciseHistory,
     {}
   );
 }
@@ -259,7 +199,7 @@ export async function updateExerciseHistory(
     historyMap[exerciseId] = record;
 
     await AsyncStorage.setItem(KEYS.EXERCISE_HISTORY, JSON.stringify(historyMap));
-    pushOrQueue("POST", "/api/exercise-history", record).catch(() => {});
+    pushOrQueue({ type: "upsertExerciseHistory", record }).catch(() => {});
   });
 }
 

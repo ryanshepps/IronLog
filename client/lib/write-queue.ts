@@ -1,15 +1,28 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { apiRequest } from "@/lib/query-client";
+import {
+  addRemoteFavorite,
+  deleteRemoteWorkout,
+  removeRemoteFavorite,
+  upsertRemoteExerciseHistory,
+  upsertRemoteWorkout,
+} from "@/lib/remote-sync";
+import type { ExerciseHistory, Workout } from "@/types/workout";
 
-const QUEUE_KEY = "@ironlog/write_queue_v1";
+const QUEUE_KEY = "@ironlog/write_queue_v2";
 
-export type QueuedOp = {
+type QueuedOpPayload =
+  | { type: "upsertWorkout"; workout: Workout }
+  | { type: "deleteWorkout"; workoutId: string }
+  | { type: "addFavorite"; exerciseId: string }
+  | { type: "removeFavorite"; exerciseId: string }
+  | { type: "upsertExerciseHistory"; record: ExerciseHistory };
+
+export type QueuedOp = QueuedOpPayload & {
   id: string;
-  method: "POST" | "PUT" | "DELETE";
-  path: string;
-  body?: unknown;
   enqueuedAt: number;
 };
+
+type NewQueuedOp = QueuedOpPayload;
 
 let flushing = false;
 
@@ -26,7 +39,27 @@ async function writeQueue(ops: QueuedOp[]): Promise<void> {
   await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(ops));
 }
 
-export async function enqueue(op: Omit<QueuedOp, "id" | "enqueuedAt">): Promise<void> {
+async function dispatchQueuedOp(op: NewQueuedOp): Promise<void> {
+  switch (op.type) {
+    case "upsertWorkout":
+      await upsertRemoteWorkout(op.workout);
+      return;
+    case "deleteWorkout":
+      await deleteRemoteWorkout(op.workoutId);
+      return;
+    case "addFavorite":
+      await addRemoteFavorite(op.exerciseId);
+      return;
+    case "removeFavorite":
+      await removeRemoteFavorite(op.exerciseId);
+      return;
+    case "upsertExerciseHistory":
+      await upsertRemoteExerciseHistory(op.record);
+      return;
+  }
+}
+
+export async function enqueue(op: NewQueuedOp): Promise<void> {
   const queue = await readQueue();
   queue.push({
     ...op,
@@ -36,17 +69,13 @@ export async function enqueue(op: Omit<QueuedOp, "id" | "enqueuedAt">): Promise<
   await writeQueue(queue);
 }
 
-export async function pushOrQueue(
-  method: "POST" | "PUT" | "DELETE",
-  path: string,
-  body?: unknown
-): Promise<void> {
+export async function pushOrQueue(op: NewQueuedOp): Promise<void> {
   try {
-    await apiRequest(method, path, body);
+    await dispatchQueuedOp(op);
     flushQueue().catch(() => {});
   } catch (error) {
-    console.warn(`[write-queue] enqueueing ${method} ${path}:`, error);
-    await enqueue({ method, path, body });
+    console.warn(`[write-queue] enqueueing ${op.type}:`, error);
+    await enqueue(op);
   }
 }
 
@@ -54,13 +83,14 @@ export async function flushQueue(): Promise<void> {
   if (flushing) return;
   flushing = true;
   try {
-    let queue = await readQueue();
+    const queue = await readQueue();
     const remaining: QueuedOp[] = [];
     for (const op of queue) {
+      const { id: _id, enqueuedAt: _enqueuedAt, ...payload } = op;
       try {
-        await apiRequest(op.method, op.path, op.body);
+        await dispatchQueuedOp(payload);
       } catch (error) {
-        console.warn(`[write-queue] retry failed ${op.method} ${op.path}`);
+        console.warn(`[write-queue] retry failed ${op.type}`);
         remaining.push(op);
       }
     }
