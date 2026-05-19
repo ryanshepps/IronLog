@@ -34,7 +34,6 @@ yarn-error.*
 # local env files
 .env
 .env*.local
-owner-data-export*.json
 
 # typescript
 *.tsbuildinfo

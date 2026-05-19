@@ -36,7 +36,7 @@ Supabase values used by TestFlight builds.
 ```
 client/   React Native app
 shared/   Zod schemas shared by local tools
-scripts/  One-off owner import/export tooling
+scripts/  Local maintenance tooling (migrations, security check, deploy)
 supabase/ Supabase config and SQL migrations
 ```
 

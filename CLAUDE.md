@@ -35,7 +35,7 @@ eas build --platform ios      # Build iOS app via EAS
 - `client/` - React Native (Expo v54, React 19) frontend
 - `shared/` - Shared Zod validation schemas (`schema.ts`)
 - `supabase/` - Supabase config and SQL migrations
-- `scripts/` - One-off owner import/export tooling
+- `scripts/` - Local maintenance tooling (migration apply, security check, iOS deploy)
 
 **Path aliases:** `@/*` maps to `./client/*`, `@shared/*` maps to `./shared/*`
 
@@ -54,7 +54,7 @@ eas build --platform ios      # Build iOS app via EAS
 
 ## Environment
 
-Requires Node 22 (see `.tool-versions`). Expo environment variables: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Owner import/export scripts additionally use local-only `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `OWNER_USER_ID`, and `OWNER_EXPORT_PATH`.
+Requires Node 22 (see `.tool-versions`). Expo environment variables: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Local tooling scripts additionally use local-only `SUPABASE_DB_URL` (`apply-migrations.ts`) and `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (`security-check.ts`).
 
 ## Workflow
 

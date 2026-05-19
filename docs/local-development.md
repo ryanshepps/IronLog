@@ -16,22 +16,29 @@ EXPO_PUBLIC_SUPABASE_URL=https://dxwvfrcqafbawswysbkd.supabase.co
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_t-YKjmm4g_WkjnqzAjCJeQ_DCFCpZJY
 ```
 
-The owner import/export scripts also use local-only values. Do not expose these
+The local tooling scripts use additional local-only values. Do not expose these
 through Expo env and do not commit real values:
 
 ```bash
-DATABASE_URL=<old-postgres-url-for-one-time-export>
+# apply-migrations.ts — Supabase session-pooler connection URI
+SUPABASE_DB_URL=<supabase-session-pooler-uri>
+# security-check.ts
 SUPABASE_URL=https://dxwvfrcqafbawswysbkd.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=<local-only-service-role-key>
-OWNER_USER_ID=<supabase-auth-user-id>
-OWNER_EXPORT_PATH=<path-to-local-owner-export-json>
 ```
 
 ## Supabase Schema
 
-Apply SQL files in `supabase/migrations/` to the Supabase project before using a
-fresh environment. They create the app tables, built-in exercises, RLS policies,
-and RPC functions used by the client.
+Apply the SQL files in `supabase/migrations/` to the Supabase project before
+using a fresh environment — they create the app tables, built-in exercises,
+table grants, RLS policies, and RPC functions used by the client:
+
+```bash
+pnpm exec tsx scripts/apply-migrations.ts
+```
+
+The script tracks applied files in `public.schema_migrations`, so re-runs only
+apply migrations that have not run yet.
 
 ## Start Expo
 
