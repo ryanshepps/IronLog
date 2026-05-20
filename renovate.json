@@ -6,7 +6,6 @@
     ":semanticCommits"
   ],
   "timezone": "America/Toronto",
-  "postUpdateOptions": ["pnpmDedupe"],
   "rangeStrategy": "bump",
   "automerge": true,
   "automergeType": "pr",
@@ -20,7 +19,7 @@
   },
   "packageRules": [
     {
-      "description": "Disable updates for patched packages — patch file is version-pinned and must be updated manually",
+      "description": "Pinned to 2.105.4 — 2.106.x adds an OpenTelemetry dynamic import() that Hermes cannot compile. Bump manually only when upstream drops the dynamic import.",
       "matchPackageNames": ["@supabase/supabase-js"],
       "enabled": false
     },
