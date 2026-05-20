@@ -5,6 +5,7 @@
     ":dependencyDashboard",
     ":semanticCommits"
   ],
+  "timezone": "America/Toronto",
   "rangeStrategy": "bump",
   "automerge": true,
   "automergeType": "pr",
