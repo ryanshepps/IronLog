@@ -60,7 +60,7 @@
     "@types/react": "~19.1.0",
     "babel-plugin-module-resolver": "^5.0.2",
     "dotenv": "^17.4.2",
-    "eas-cli": "^18.5.0",
+    "eas-cli": "^19.0.1",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "eslint-config-prettier": "^10.1.8",
