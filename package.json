@@ -68,7 +68,7 @@
     "eslint-plugin-prettier": "^5.5.4",
     "pg": "^8.20.0",
     "prettier": "3.6.2",
-    "typescript": "~5.9.2"
+    "typescript": "~6.0.3"
   },
   "private": true,
   "packageManager": "pnpm@11.1.3"
