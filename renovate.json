@@ -6,6 +6,7 @@
     ":semanticCommits"
   ],
   "timezone": "America/Toronto",
+  "postUpdateOptions": ["pnpmDedupe"],
   "rangeStrategy": "bump",
   "automerge": true,
   "automergeType": "pr",
