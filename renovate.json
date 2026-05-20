@@ -20,6 +20,11 @@
   },
   "packageRules": [
     {
+      "description": "Disable updates for patched packages — patch file is version-pinned and must be updated manually",
+      "matchPackageNames": ["@supabase/supabase-js"],
+      "enabled": false
+    },
+    {
       "description": "Group all non-major dependency updates into a single PR",
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "groupName": "all non-major dependencies",
