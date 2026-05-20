@@ -35,6 +35,10 @@ yarn-error.*
 .env
 .env*.local
 
+# local working notes — never commit
+SPEC.md
+docs/plans/
+
 # typescript
 *.tsbuildinfo
 

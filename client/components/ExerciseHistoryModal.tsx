@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, StyleSheet, Modal, Pressable, ScrollView, Dimensions } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Modal,
+  Pressable,
+  ScrollView,
+  Dimensions,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path, Circle, Line, Text as SvgText } from "react-native-svg";
@@ -9,7 +16,10 @@ import { ThemedText } from "@/components/ThemedText";
 import { FeelingDots } from "@/components/FeelingRating";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { ExercisePerformanceEntry, getExercisePerformanceHistory } from "@/lib/storage";
+import {
+  ExercisePerformanceEntry,
+  getExercisePerformanceHistory,
+} from "@/lib/storage";
 
 interface ExerciseHistoryModalProps {
   visible: boolean;
@@ -35,9 +45,17 @@ function ProgressChart({
 
   if (data.length < 2) {
     return (
-      <View style={[styles.chartPlaceholder, { backgroundColor: theme.backgroundSecondary }]}>
+      <View
+        style={[
+          styles.chartPlaceholder,
+          { backgroundColor: theme.backgroundSecondary },
+        ]}
+      >
         <Feather name="trending-up" size={32} color={theme.textSecondary} />
-        <ThemedText type="body" style={{ color: theme.textSecondary, marginTop: Spacing.sm }}>
+        <ThemedText
+          type="body"
+          style={{ color: theme.textSecondary, marginTop: Spacing.sm }}
+        >
           Log more sessions to see your progress
         </ThemedText>
       </View>
@@ -46,15 +64,15 @@ function ProgressChart({
 
   // Reverse so oldest is first for chart
   const chartData = [...data].reverse().slice(-10);
-  
-  const weights = chartData.map(d => d.bestWeight);
+
+  const weights = chartData.map((d) => d.bestWeight);
   const minWeight = Math.min(...weights);
   const maxWeight = Math.max(...weights);
   const weightRange = maxWeight - minWeight || 10;
   const paddedMin = minWeight - weightRange * 0.1;
   const paddedMax = maxWeight + weightRange * 0.1;
 
-  const volumes = chartData.map(d => d.totalVolume);
+  const volumes = chartData.map((d) => d.totalVolume);
   const minVolume = Math.min(...volumes);
   const maxVolume = Math.max(...volumes);
   const volumeRange = maxVolume - minVolume || 1;
@@ -98,29 +116,56 @@ function ProgressChart({
   const firstWeight = chartData[0].bestWeight;
   const lastWeight = chartData[chartData.length - 1].bestWeight;
   const trend = lastWeight - firstWeight;
-  const trendPercent = firstWeight > 0 ? ((trend / firstWeight) * 100).toFixed(1) : "0";
+  const trendPercent =
+    firstWeight > 0 ? ((trend / firstWeight) * 100).toFixed(1) : "0";
 
   return (
     <View style={styles.chartContainer}>
       <View style={styles.chartHeader}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.md, flexWrap: "wrap" }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: Spacing.md,
+            flexWrap: "wrap",
+          }}
+        >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <View style={{ width: 10, height: 2, backgroundColor: theme.primary }} />
-            <ThemedText type="small" style={{ color: theme.textSecondary, fontWeight: "600" }}>
+            <View
+              style={{ width: 10, height: 2, backgroundColor: theme.primary }}
+            />
+            <ThemedText
+              type="small"
+              style={{ color: theme.textSecondary, fontWeight: "600" }}
+            >
               Weight
             </ThemedText>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <View style={{ width: 10, height: 2, backgroundColor: theme.feelingEasy }} />
-            <ThemedText type="small" style={{ color: theme.textSecondary, fontWeight: "600" }}>
+            <View
+              style={{
+                width: 10,
+                height: 2,
+                backgroundColor: theme.feelingEasy,
+              }}
+            />
+            <ThemedText
+              type="small"
+              style={{ color: theme.textSecondary, fontWeight: "600" }}
+            >
               Volume
             </ThemedText>
           </View>
         </View>
-        <View style={[
-          styles.trendBadge,
-          { backgroundColor: trend >= 0 ? theme.feelingEasy + "20" : theme.error + "20" }
-        ]}>
+        <View
+          style={[
+            styles.trendBadge,
+            {
+              backgroundColor:
+                trend >= 0 ? theme.feelingEasy + "20" : theme.error + "20",
+            },
+          ]}
+        >
           <Feather
             name={trend >= 0 ? "trending-up" : "trending-down"}
             size={14}
@@ -128,13 +173,17 @@ function ProgressChart({
           />
           <ThemedText
             type="small"
-            style={{ color: trend >= 0 ? theme.feelingEasy : theme.error, fontWeight: "600" }}
+            style={{
+              color: trend >= 0 ? theme.feelingEasy : theme.error,
+              fontWeight: "600",
+            }}
           >
-            {trend >= 0 ? "+" : ""}{trendPercent}%
+            {trend >= 0 ? "+" : ""}
+            {trendPercent}%
           </ThemedText>
         </View>
       </View>
-      
+
       <Svg width={chartWidth} height={CHART_HEIGHT}>
         {/* Y-axis labels */}
         <SvgText
@@ -143,7 +192,8 @@ function ProgressChart({
           fill={theme.textSecondary}
           fontSize={10}
         >
-          {Math.round(paddedMax)}{units}
+          {Math.round(paddedMax)}
+          {units}
         </SvgText>
         <SvgText
           x={8}
@@ -151,7 +201,8 @@ function ProgressChart({
           fill={theme.textSecondary}
           fontSize={10}
         >
-          {Math.round(paddedMin)}{units}
+          {Math.round(paddedMin)}
+          {units}
         </SvgText>
 
         {/* Grid lines */}
@@ -261,45 +312,72 @@ function HistoryEntry({
             })}
           </ThemedText>
           {isLatest ? (
-            <View style={[styles.latestBadge, { backgroundColor: theme.primary + "20" }]}>
-              <ThemedText type="small" style={{ color: theme.primary, fontWeight: "600" }}>
+            <View
+              style={[
+                styles.latestBadge,
+                { backgroundColor: theme.primary + "20" },
+              ]}
+            >
+              <ThemedText
+                type="small"
+                style={{ color: theme.primary, fontWeight: "600" }}
+              >
                 Latest
               </ThemedText>
             </View>
           ) : null}
         </View>
         <ThemedText type="small" style={{ color: theme.textSecondary }}>
-          {entry.sets.length} {entry.sets.length === 1 ? "set" : "sets"} · {entry.totalVolume.toLocaleString()} vol
+          {entry.sets.length} {entry.sets.length === 1 ? "set" : "sets"} ·{" "}
+          {entry.totalVolume.toLocaleString()} vol
         </ThemedText>
       </View>
 
       <View style={styles.setsTable}>
         <View style={styles.setsTableHeader}>
-          <ThemedText type="small" style={[styles.setColumn, { color: theme.textSecondary }]}>
+          <ThemedText
+            type="small"
+            style={[styles.setColumn, { color: theme.textSecondary }]}
+          >
             Set
           </ThemedText>
-          <ThemedText type="small" style={[styles.weightColumn, { color: theme.textSecondary }]}>
+          <ThemedText
+            type="small"
+            style={[styles.weightColumn, { color: theme.textSecondary }]}
+          >
             Weight
           </ThemedText>
-          <ThemedText type="small" style={[styles.repsColumn, { color: theme.textSecondary }]}>
+          <ThemedText
+            type="small"
+            style={[styles.repsColumn, { color: theme.textSecondary }]}
+          >
             Reps
           </ThemedText>
-          <ThemedText type="small" style={[styles.feelingColumn, { color: theme.textSecondary }]}>
+          <ThemedText
+            type="small"
+            style={[styles.feelingColumn, { color: theme.textSecondary }]}
+          >
             RPE
           </ThemedText>
         </View>
         {entry.sets.map((set, setIndex) => (
-          <View 
-            key={setIndex} 
+          <View
+            key={setIndex}
             style={[
               styles.setRow,
               { borderTopColor: theme.textSecondary + "20" },
             ]}
           >
-            <ThemedText type="body" style={[styles.setColumn, { color: theme.textSecondary }]}>
+            <ThemedText
+              type="body"
+              style={[styles.setColumn, { color: theme.textSecondary }]}
+            >
               {setIndex + 1}
             </ThemedText>
-            <ThemedText type="body" style={[styles.weightColumn, { fontWeight: "600" }]}>
+            <ThemedText
+              type="body"
+              style={[styles.weightColumn, { fontWeight: "600" }]}
+            >
               {set.weight} {units}
             </ThemedText>
             <ThemedText type="body" style={styles.repsColumn}>
@@ -340,9 +418,8 @@ export function ExerciseHistoryModal({
     }
   }, [visible, loadHistory]);
 
-  const personalRecord = history.length > 0
-    ? Math.max(...history.map(h => h.bestWeight))
-    : 0;
+  const personalRecord =
+    history.length > 0 ? Math.max(...history.map((h) => h.bestWeight)) : 0;
 
   return (
     <Modal
@@ -371,7 +448,12 @@ export function ExerciseHistoryModal({
           showsVerticalScrollIndicator={false}
         >
           {personalRecord > 0 ? (
-            <View style={[styles.prBanner, { backgroundColor: theme.primary + "15" }]}>
+            <View
+              style={[
+                styles.prBanner,
+                { backgroundColor: theme.primary + "15" },
+              ]}
+            >
               <Feather name="award" size={24} color={theme.primary} />
               <View style={styles.prContent}>
                 <ThemedText type="small" style={{ color: theme.textSecondary }}>
@@ -395,7 +477,12 @@ export function ExerciseHistoryModal({
             </ThemedText>
 
             {history.length === 0 ? (
-              <View style={[styles.emptyHistory, { backgroundColor: theme.backgroundSecondary }]}>
+              <View
+                style={[
+                  styles.emptyHistory,
+                  { backgroundColor: theme.backgroundSecondary },
+                ]}
+              >
                 <Feather name="clock" size={32} color={theme.textSecondary} />
                 <ThemedText
                   type="body"

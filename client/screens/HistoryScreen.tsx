@@ -15,7 +15,12 @@ import { ExerciseHistoryModal } from "@/components/ExerciseHistoryModal";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { Workout, UserPreferences, WorkoutExercise } from "@/types/workout";
-import { getWorkouts, getPreferences, getCurrentWorkout, formatDateLocal } from "@/lib/storage";
+import {
+  getWorkouts,
+  getPreferences,
+  getCurrentWorkout,
+  formatDateLocal,
+} from "@/lib/storage";
 
 const emptyHistoryImage = require("../../assets/images/empty-states/empty-history.png");
 
@@ -127,7 +132,9 @@ function Calendar({
   };
 
   return (
-    <View style={[styles.calendar, { backgroundColor: theme.backgroundSecondary }]}>
+    <View
+      style={[styles.calendar, { backgroundColor: theme.backgroundSecondary }]}
+    >
       <View style={styles.calendarHeader}>
         <Pressable onPress={handlePrevMonth} hitSlop={12}>
           <Feather name="chevron-left" size={24} color={theme.text} />
@@ -176,10 +183,10 @@ function Calendar({
                   color: isSelected
                     ? "#FFFFFF"
                     : day.isCurrentMonth
-                    ? day.isToday
-                      ? theme.primary
-                      : theme.text
-                    : theme.textSecondary,
+                      ? day.isToday
+                        ? theme.primary
+                        : theme.text
+                      : theme.textSecondary,
                   fontWeight: day.isToday || isSelected ? "700" : "400",
                   opacity: day.isCurrentMonth ? 1 : 0.4,
                 }}
@@ -218,14 +225,17 @@ function WorkoutCard({
 
   const totalSets = workout.exercises.reduce(
     (acc, ex) => acc + ex.sets.length,
-    0
+    0,
   );
 
   return (
     <Animated.View
       entering={FadeIn.delay(index * 50).duration(200)}
       layout={Layout.springify()}
-      style={[styles.workoutCard, { backgroundColor: theme.backgroundSecondary }]}
+      style={[
+        styles.workoutCard,
+        { backgroundColor: theme.backgroundSecondary },
+      ]}
     >
       <View style={styles.workoutCardHeader}>
         <ThemedText type="h4">
@@ -292,7 +302,8 @@ export default function HistoryScreen() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState<WorkoutExercise | null>(null);
+  const [selectedExercise, setSelectedExercise] =
+    useState<WorkoutExercise | null>(null);
 
   const handleExercisePress = useCallback((exercise: WorkoutExercise) => {
     setSelectedExercise(exercise);
@@ -305,19 +316,21 @@ export default function HistoryScreen() {
       getCurrentWorkout(),
       getPreferences(),
     ]);
-    
+
     // Combine saved workouts with current workout if it has exercises
     let combinedWorkouts = [...allWorkouts];
     if (currentWorkout && currentWorkout.exercises.length > 0) {
       // Check if current workout is already in the list
-      const existingIndex = combinedWorkouts.findIndex(w => w.id === currentWorkout.id);
+      const existingIndex = combinedWorkouts.findIndex(
+        (w) => w.id === currentWorkout.id,
+      );
       if (existingIndex >= 0) {
         combinedWorkouts[existingIndex] = currentWorkout;
       } else {
         combinedWorkouts.unshift(currentWorkout);
       }
     }
-    
+
     setWorkouts(combinedWorkouts);
     setPreferences(prefs);
   }, []);
@@ -326,7 +339,7 @@ export default function HistoryScreen() {
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [loadData])
+    }, [loadData]),
   );
 
   const workoutDates = useMemo(() => {

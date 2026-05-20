@@ -33,12 +33,15 @@ export function FAB({ onPress, icon = "plus", bottom = 20 }: FABProps) {
       withSequence(
         withDelay(
           3000,
-          withTiming(1.05, { duration: 800, easing: Easing.inOut(Easing.ease) })
+          withTiming(1.05, {
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+          }),
         ),
-        withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) })
+        withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) }),
       ),
       -1,
-      false
+      false,
     );
   }, []);
 

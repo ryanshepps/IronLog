@@ -121,8 +121,15 @@ export function FeelingRating({
   );
 }
 
-export function FeelingDots({ feeling }: { feeling: number }) {
+export function FeelingDots({
+  feeling,
+  size = "default",
+}: {
+  feeling: number;
+  size?: "default" | "small";
+}) {
   const { theme } = useTheme();
+  const dotSize = size === "small" ? 4 : 6;
 
   const getColor = () => {
     if (feeling <= 3) return theme.feelingEasy;
@@ -138,7 +145,11 @@ export function FeelingDots({ feeling }: { feeling: number }) {
           style={[
             styles.dot,
             {
-              backgroundColor: i <= feeling ? getColor() : theme.backgroundSecondary,
+              width: dotSize,
+              height: dotSize,
+              borderRadius: dotSize / 2,
+              backgroundColor:
+                i <= feeling ? getColor() : theme.backgroundSecondary,
             },
           ]}
         />

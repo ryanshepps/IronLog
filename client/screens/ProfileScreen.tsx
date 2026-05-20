@@ -13,7 +13,12 @@ import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { UserPreferences, DEFAULT_PREFERENCES } from "@/types/workout";
-import { getPreferences, savePreferences, getWorkouts, getCurrentWorkout } from "@/lib/storage";
+import {
+  getPreferences,
+  savePreferences,
+  getWorkouts,
+  getCurrentWorkout,
+} from "@/lib/storage";
 
 function SettingsSection({
   title,
@@ -33,7 +38,10 @@ function SettingsSection({
         {title}
       </ThemedText>
       <View
-        style={[styles.sectionContent, { backgroundColor: theme.backgroundSecondary }]}
+        style={[
+          styles.sectionContent,
+          { backgroundColor: theme.backgroundSecondary },
+        ]}
       >
         {children}
       </View>
@@ -104,7 +112,10 @@ function Divider() {
   const { theme } = useTheme();
   return (
     <View
-      style={[styles.divider, { backgroundColor: theme.border, marginLeft: 52 }]}
+      style={[
+        styles.divider,
+        { backgroundColor: theme.border, marginLeft: 52 },
+      ]}
     />
   );
 }
@@ -116,9 +127,8 @@ export default function ProfileScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { user, logout, updateProfile } = useAuth();
 
-  const [preferences, setPreferences] = useState<UserPreferences>(
-    DEFAULT_PREFERENCES
-  );
+  const [preferences, setPreferences] =
+    useState<UserPreferences>(DEFAULT_PREFERENCES);
   const [stats, setStats] = useState({
     totalWorkouts: 0,
     totalSets: 0,
@@ -131,9 +141,9 @@ export default function ProfileScreen() {
       getWorkouts(),
       getCurrentWorkout(),
     ]);
-    
+
     if (user) {
-      setPreferences(prev => ({
+      setPreferences((prev) => ({
         ...prev,
         ...prefs,
         displayName: user.displayName || "Athlete",
@@ -145,7 +155,9 @@ export default function ProfileScreen() {
 
     let allWorkouts = [...workouts];
     if (currentWorkout && currentWorkout.exercises.length > 0) {
-      const existingIndex = allWorkouts.findIndex(w => w.id === currentWorkout.id);
+      const existingIndex = allWorkouts.findIndex(
+        (w) => w.id === currentWorkout.id,
+      );
       if (existingIndex >= 0) {
         allWorkouts[existingIndex] = currentWorkout;
       } else {
@@ -155,11 +167,11 @@ export default function ProfileScreen() {
 
     const totalSets = allWorkouts.reduce(
       (acc, w) => acc + w.exercises.reduce((a, e) => a + e.sets.length, 0),
-      0
+      0,
     );
     const totalExercises = allWorkouts.reduce(
       (acc, w) => acc + w.exercises.length,
-      0
+      0,
     );
 
     setStats({
@@ -172,7 +184,7 @@ export default function ProfileScreen() {
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [loadData])
+    }, [loadData]),
   );
 
   const handleToggleUnits = async () => {
@@ -180,11 +192,11 @@ export default function ProfileScreen() {
     const newUnits = preferences.units === "lbs" ? "kg" : "lbs";
     setPreferences((prev) => ({ ...prev, units: newUnits }));
     await savePreferences({ units: newUnits });
-    
+
     try {
       await updateProfile({ units: newUnits });
     } catch (error) {
-      console.error("Failed to sync units to server:", error);
+      console.error("Failed to sync units to Supabase:", error);
     }
   };
 
@@ -199,14 +211,10 @@ export default function ProfileScreen() {
         await performLogout();
       }
     } else {
-      Alert.alert(
-        "Log Out",
-        "Are you sure you want to log out?",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Log Out", style: "destructive", onPress: performLogout },
-        ]
-      );
+      Alert.alert("Log Out", "Are you sure you want to log out?", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Log Out", style: "destructive", onPress: performLogout },
+      ]);
     }
   };
 
@@ -233,14 +241,22 @@ export default function ProfileScreen() {
             {user?.displayName || preferences.displayName}
           </ThemedText>
           {user?.email ? (
-            <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: Spacing.xs }}>
+            <ThemedText
+              type="caption"
+              style={{ color: theme.textSecondary, marginTop: Spacing.xs }}
+            >
               {user.email}
             </ThemedText>
           ) : null}
         </View>
 
         <View style={styles.statsContainer}>
-          <View style={[styles.statCard, { backgroundColor: theme.backgroundSecondary }]}>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: theme.backgroundSecondary },
+            ]}
+          >
             <ThemedText type="h2" style={{ color: theme.primary }}>
               {stats.totalWorkouts}
             </ThemedText>
@@ -248,7 +264,12 @@ export default function ProfileScreen() {
               Workouts
             </ThemedText>
           </View>
-          <View style={[styles.statCard, { backgroundColor: theme.backgroundSecondary }]}>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: theme.backgroundSecondary },
+            ]}
+          >
             <ThemedText type="h2" style={{ color: theme.primary }}>
               {stats.totalSets}
             </ThemedText>
@@ -256,7 +277,12 @@ export default function ProfileScreen() {
               Sets
             </ThemedText>
           </View>
-          <View style={[styles.statCard, { backgroundColor: theme.backgroundSecondary }]}>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: theme.backgroundSecondary },
+            ]}
+          >
             <ThemedText type="h2" style={{ color: theme.primary }}>
               {stats.totalExercises}
             </ThemedText>
@@ -289,7 +315,8 @@ export default function ProfileScreen() {
                   <ThemedText
                     type="small"
                     style={{
-                      color: preferences.units === "lbs" ? "#FFFFFF" : theme.text,
+                      color:
+                        preferences.units === "lbs" ? "#FFFFFF" : theme.text,
                       fontWeight: "600",
                     }}
                   >
@@ -307,7 +334,8 @@ export default function ProfileScreen() {
                   <ThemedText
                     type="small"
                     style={{
-                      color: preferences.units === "kg" ? "#FFFFFF" : theme.text,
+                      color:
+                        preferences.units === "kg" ? "#FFFFFF" : theme.text,
                       fontWeight: "600",
                     }}
                   >

@@ -148,7 +148,10 @@ export function ExerciseCard({
         ]}
       >
         <Feather name="plus" size={20} color={theme.primary} />
-        <ThemedText type="body" style={{ color: theme.primary, fontWeight: "600" }}>
+        <ThemedText
+          type="body"
+          style={{ color: theme.primary, fontWeight: "600" }}
+        >
           Add Set
         </ThemedText>
       </Pressable>

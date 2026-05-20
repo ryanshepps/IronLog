@@ -6,63 +6,15 @@ import {
   UserPreferences,
   DEFAULT_PREFERENCES,
 } from "@/types/workout";
-import { apiRequest } from "@/lib/query-client";
 import { pushOrQueue } from "@/lib/write-queue";
+import {
+  getRemoteExerciseHistory,
+  getRemoteFavorites,
+  getRemoteWorkouts,
+} from "@/lib/remote-sync";
 
 export { formatDateLocal } from "@/lib/date";
 import { formatDateLocal } from "@/lib/date";
-
-function toMs(value: unknown): number {
-  if (typeof value === "number") return value;
-  if (typeof value === "string") {
-    const parsed = Date.parse(value);
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }
-  return 0;
-}
-
-interface RawWorkout {
-  id: string;
-  date: string;
-  exercises?: Workout["exercises"];
-  completedAt?: string | number | null;
-}
-
-interface RawHistoryRecord {
-  exerciseId: string;
-  exerciseName: string;
-  lastWeight?: number | null;
-  lastReps?: number | null;
-  lastFeeling?: number | null;
-  lastPerformed?: string | number | null;
-  personalRecord?: number | null;
-}
-
-function normalizeWorkout(raw: RawWorkout): Workout {
-  return {
-    id: raw.id,
-    date: raw.date,
-    exercises: raw.exercises ?? [],
-    completedAt: raw.completedAt ? toMs(raw.completedAt) : undefined,
-  };
-}
-
-function normalizeHistoryRecord(raw: RawHistoryRecord): ExerciseHistory {
-  return {
-    exerciseId: raw.exerciseId,
-    exerciseName: raw.exerciseName,
-    lastWeight: raw.lastWeight ?? 0,
-    lastReps: raw.lastReps ?? 0,
-    lastFeeling: raw.lastFeeling ?? 5,
-    lastPerformed: toMs(raw.lastPerformed),
-    personalRecord: raw.personalRecord ?? 0,
-  };
-}
-
-async function fetchJSON<T>(path: string): Promise<T> {
-  const res = await apiRequest("GET", path);
-  return (await res.json()) as T;
-}
 
 const KEYS = {
   WORKOUTS: "@ironlog/workouts",
@@ -91,15 +43,13 @@ async function readCache<T>(key: string, fallback: T): Promise<T> {
   }
 }
 
-async function cachedRead<TRemote, TLocal>(
+async function cachedRead<TLocal>(
   key: string,
-  path: string,
-  transform: (remote: TRemote) => TLocal,
-  fallback: TLocal
+  readRemote: () => Promise<TLocal>,
+  fallback: TLocal,
 ): Promise<TLocal> {
   try {
-    const remote = await fetchJSON<TRemote>(path);
-    const value = transform(remote);
+    const value = await readRemote();
     await AsyncStorage.setItem(key, JSON.stringify(value));
     return value;
   } catch {
@@ -112,12 +62,7 @@ export async function getWorkoutsFromCache(): Promise<Workout[]> {
 }
 
 export async function getWorkouts(): Promise<Workout[]> {
-  return cachedRead<RawWorkout[], Workout[]>(
-    KEYS.WORKOUTS,
-    "/api/workouts",
-    (remote) => remote.map(normalizeWorkout),
-    []
-  );
+  return cachedRead<Workout[]>(KEYS.WORKOUTS, getRemoteWorkouts, []);
 }
 
 export async function saveWorkout(workout: Workout): Promise<void> {
@@ -132,7 +77,7 @@ export async function saveWorkout(workout: Workout): Promise<void> {
     }
 
     await AsyncStorage.setItem(KEYS.WORKOUTS, JSON.stringify(workouts));
-    pushOrQueue("POST", "/api/workouts", workout).catch(() => {});
+    pushOrQueue({ type: "upsertWorkout", workout }).catch(() => {});
   });
 }
 
@@ -141,7 +86,7 @@ export async function deleteWorkout(workoutId: string): Promise<void> {
     const workouts = await getWorkoutsFromCache();
     const filtered = workouts.filter((w) => w.id !== workoutId);
     await AsyncStorage.setItem(KEYS.WORKOUTS, JSON.stringify(filtered));
-    pushOrQueue("DELETE", `/api/workouts/${workoutId}`).catch(() => {});
+    pushOrQueue({ type: "deleteWorkout", workoutId }).catch(() => {});
   });
 }
 
@@ -155,7 +100,9 @@ export async function getCurrentWorkout(): Promise<Workout | null> {
   }
 }
 
-export async function saveCurrentWorkout(workout: Workout | null): Promise<void> {
+export async function saveCurrentWorkout(
+  workout: Workout | null,
+): Promise<void> {
   return withMutation("saving current workout", async () => {
     if (workout) {
       await AsyncStorage.setItem(KEYS.CURRENT_WORKOUT, JSON.stringify(workout));
@@ -170,12 +117,7 @@ export async function getFavoritesFromCache(): Promise<string[]> {
 }
 
 export async function getFavorites(): Promise<string[]> {
-  return cachedRead<string[], string[]>(
-    KEYS.FAVORITES,
-    "/api/favorites",
-    (remote) => remote,
-    []
-  );
+  return cachedRead<string[]>(KEYS.FAVORITES, getRemoteFavorites, []);
 }
 
 export async function addFavorite(exerciseId: string): Promise<void> {
@@ -185,7 +127,7 @@ export async function addFavorite(exerciseId: string): Promise<void> {
       favorites.unshift(exerciseId);
       await AsyncStorage.setItem(KEYS.FAVORITES, JSON.stringify(favorites));
     }
-    pushOrQueue("POST", `/api/favorites/${exerciseId}`).catch(() => {});
+    pushOrQueue({ type: "addFavorite", exerciseId }).catch(() => {});
   });
 }
 
@@ -194,14 +136,14 @@ export async function removeFavorite(exerciseId: string): Promise<void> {
     const favorites = await getFavoritesFromCache();
     const filtered = favorites.filter((id) => id !== exerciseId);
     await AsyncStorage.setItem(KEYS.FAVORITES, JSON.stringify(filtered));
-    pushOrQueue("DELETE", `/api/favorites/${exerciseId}`).catch(() => {});
+    pushOrQueue({ type: "removeFavorite", exerciseId }).catch(() => {});
   });
 }
 
 export async function toggleFavorite(exerciseId: string): Promise<boolean> {
   const favorites = await getFavorites();
   const isFavorite = favorites.includes(exerciseId);
-  
+
   if (isFavorite) {
     await removeFavorite(exerciseId);
     return false;
@@ -211,35 +153,33 @@ export async function toggleFavorite(exerciseId: string): Promise<boolean> {
   }
 }
 
-export async function getAllExerciseHistoryFromCache(): Promise<Record<string, ExerciseHistory>> {
+export async function getAllExerciseHistoryFromCache(): Promise<
+  Record<string, ExerciseHistory>
+> {
   return readCache<Record<string, ExerciseHistory>>(KEYS.EXERCISE_HISTORY, {});
 }
 
-export async function getExerciseHistory(exerciseId: string): Promise<ExerciseHistory | null> {
+export async function getExerciseHistory(
+  exerciseId: string,
+): Promise<ExerciseHistory | null> {
   const map = await getAllExerciseHistory();
   return map[exerciseId] || null;
 }
 
-export async function getAllExerciseHistory(): Promise<Record<string, ExerciseHistory>> {
-  return cachedRead<RawHistoryRecord[], Record<string, ExerciseHistory>>(
+export async function getAllExerciseHistory(): Promise<
+  Record<string, ExerciseHistory>
+> {
+  return cachedRead<Record<string, ExerciseHistory>>(
     KEYS.EXERCISE_HISTORY,
-    "/api/exercise-history",
-    (remote) => {
-      const map: Record<string, ExerciseHistory> = {};
-      for (const r of remote) {
-        const norm = normalizeHistoryRecord(r);
-        map[norm.exerciseId] = norm;
-      }
-      return map;
-    },
-    {}
+    getRemoteExerciseHistory,
+    {},
   );
 }
 
 export async function updateExerciseHistory(
   exerciseId: string,
   exerciseName: string,
-  set: WorkoutSet
+  set: WorkoutSet,
 ): Promise<void> {
   return withMutation("updating exercise history", async () => {
     const historyMap = await getAllExerciseHistoryFromCache();
@@ -258,22 +198,29 @@ export async function updateExerciseHistory(
     };
     historyMap[exerciseId] = record;
 
-    await AsyncStorage.setItem(KEYS.EXERCISE_HISTORY, JSON.stringify(historyMap));
-    pushOrQueue("POST", "/api/exercise-history", record).catch(() => {});
+    await AsyncStorage.setItem(
+      KEYS.EXERCISE_HISTORY,
+      JSON.stringify(historyMap),
+    );
+    pushOrQueue({ type: "upsertExerciseHistory", record }).catch(() => {});
   });
 }
 
 export async function getPreferences(): Promise<UserPreferences> {
   try {
     const data = await AsyncStorage.getItem(KEYS.PREFERENCES);
-    return data ? { ...DEFAULT_PREFERENCES, ...JSON.parse(data) } : DEFAULT_PREFERENCES;
+    return data
+      ? { ...DEFAULT_PREFERENCES, ...JSON.parse(data) }
+      : DEFAULT_PREFERENCES;
   } catch (error) {
     console.error("Error getting preferences:", error);
     return DEFAULT_PREFERENCES;
   }
 }
 
-export async function savePreferences(preferences: Partial<UserPreferences>): Promise<void> {
+export async function savePreferences(
+  preferences: Partial<UserPreferences>,
+): Promise<void> {
   return withMutation("saving preferences", async () => {
     const current = await getPreferences();
     const updated = { ...current, ...preferences };
@@ -283,7 +230,7 @@ export async function savePreferences(preferences: Partial<UserPreferences>): Pr
 
 export async function getWorkoutsByDateRange(
   startDate: string,
-  endDate: string
+  endDate: string,
 ): Promise<Workout[]> {
   const workouts = await getWorkouts();
   return workouts.filter((w) => w.date >= startDate && w.date <= endDate);
@@ -313,30 +260,32 @@ export interface ExercisePerformanceEntry {
 }
 
 export async function getExercisePerformanceHistory(
-  exerciseId: string
+  exerciseId: string,
 ): Promise<ExercisePerformanceEntry[]> {
   try {
     const workouts = await getWorkouts();
     const currentWorkout = await getCurrentWorkout();
-    
-    const allWorkouts = currentWorkout 
-      ? [currentWorkout, ...workouts.filter(w => w.id !== currentWorkout.id)]
+
+    const allWorkouts = currentWorkout
+      ? [currentWorkout, ...workouts.filter((w) => w.id !== currentWorkout.id)]
       : workouts;
-    
+
     const entries: ExercisePerformanceEntry[] = [];
-    
+
     for (const workout of allWorkouts) {
-      const exercise = workout.exercises.find(e => e.exerciseId === exerciseId);
+      const exercise = workout.exercises.find(
+        (e) => e.exerciseId === exerciseId,
+      );
       if (exercise && exercise.sets.length > 0) {
         const sets = exercise.sets;
         const totalVolume = sets.reduce((acc, s) => acc + s.weight * s.reps, 0);
-        const bestWeight = Math.max(...sets.map(s => s.weight));
-        
+        const bestWeight = Math.max(...sets.map((s) => s.weight));
+
         entries.push({
           date: workout.date,
           timestamp: sets[0].timestamp,
           totalVolume,
-          sets: sets.map(s => ({
+          sets: sets.map((s) => ({
             weight: s.weight,
             reps: s.reps,
             feeling: s.feeling,
@@ -345,10 +294,12 @@ export async function getExercisePerformanceHistory(
         });
       }
     }
-    
+
     // Sort by date descending (most recent first)
-    entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
+    entries.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+
     return entries;
   } catch (error) {
     console.error("Error getting exercise performance history:", error);

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-IronLog is a mobile fitness tracking app built with React Native (Expo) frontend and Express backend, sharing TypeScript across both. Optimized for gym use: minimal UI, large touch targets, haptic feedback, one-handed operation.
+IronLog is a mobile fitness tracking app built with React Native (Expo) and Supabase. Optimized for gym use: minimal UI, large touch targets, haptic feedback, one-handed operation.
 
 ## Package Manager
 
@@ -17,14 +17,6 @@ IronLog is a mobile fitness tracking app built with React Native (Expo) frontend
 pnpm expo:dev                 # Start Expo dev server
 pnpm expo:static:build        # Export static web build to static-build/
 
-# Backend
-pnpm server:dev               # Start Express server (dev mode, port 5000)
-pnpm server:build             # Bundle server with esbuild to server_dist/
-pnpm server:prod              # Run production server
-
-# Database
-pnpm db:push                  # Push Drizzle schema to PostgreSQL
-
 # Quality
 pnpm lint                     # ESLint
 pnpm lint:fix                 # ESLint with autofix
@@ -32,41 +24,37 @@ pnpm check:types              # TypeScript type check (tsc --noEmit)
 pnpm check:format             # Prettier format check
 pnpm format                   # Apply prettier formatting
 
-# Docker
-docker-compose up -d db       # Start PostgreSQL only
-docker-compose up -d          # Start full stack (PostgreSQL + Express)
-
 # iOS
 eas build --platform ios      # Build iOS app via EAS
 ```
 
 ## Architecture
 
-**Three-layer TypeScript monorepo:**
+**Expo + Supabase TypeScript app:**
 
 - `client/` - React Native (Expo v54, React 19) frontend
-- `server/` - Express v5 backend with Drizzle ORM + PostgreSQL
-- `shared/` - Shared Drizzle table definitions and Zod validation schemas (`schema.ts`)
+- `shared/` - Shared Zod validation schemas (`schema.ts`)
+- `supabase/` - Supabase config and SQL migrations
+- `scripts/` - Local maintenance tooling (migration apply, security check, iOS deploy)
 
 **Path aliases:** `@/*` maps to `./client/*`, `@shared/*` maps to `./shared/*`
 
 **Frontend patterns:**
-- Auth state via React Context (`client/contexts/AuthContext`)
-- Server data via React Query (`@tanstack/react-query`) + AsyncStorage for local caching
+- Auth state via React Context (`client/contexts/AuthContext`) backed by Supabase Auth
+- Remote data via Supabase client + React Query (`@tanstack/react-query`) + AsyncStorage for local caching
 - Navigation: bottom tab bar (Log, History, Favorites, Profile), each tab has its own stack navigator
 - Theme system via `useTheme()` hook, constants in `client/constants/theme.ts`
 
-**Backend patterns:**
-- Session-based auth with `express-session` + `connect-pg-simple` (PostgreSQL session store)
-- All protected routes use `requireAuth` middleware
-- Client sends `credentials: 'include'` for cookie-based auth
-- API routes defined in `server/routes.ts`, storage layer in `server/storage.ts`
-
-**Database:** PostgreSQL with Drizzle ORM. Schema in `shared/schema.ts`. Tables: `users`, `workouts`, `favorites`, `exercise_history`. Types are inferred from Drizzle tables (e.g., `typeof workouts.$inferSelect`).
+**Supabase patterns:**
+- Client uses only `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- Service role key is local-script-only and must never be committed or exposed to Expo
+- Active workout writes commit to AsyncStorage before remote sync attempts
+- Remote writes use typed queued operations in `client/lib/write-queue.ts`
+- Schema, seed data, RLS policies, and RPCs live in `supabase/migrations/`
 
 ## Environment
 
-Requires Node 22 (see `.tool-versions`). Environment variables: `DATABASE_URL`, `SESSION_SECRET`, `EXPO_PUBLIC_DOMAIN` (defaults to `localhost:5000`), `PORT` (default 5000), `ALLOWED_ORIGINS`.
+Requires Node 22 (see `.tool-versions`). Expo environment variables: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Local tooling scripts additionally use local-only `SUPABASE_DB_URL` (`apply-migrations.ts`) and `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (`security-check.ts`).
 
 ## Workflow
 

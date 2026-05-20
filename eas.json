@@ -6,7 +6,8 @@
         "image": "macos-sequoia-15.6-xcode-26.2"
       },
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "ironlog.lastingsoftware.ca"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://dxwvfrcqafbawswysbkd.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_t-YKjmm4g_WkjnqzAjCJeQ_DCFCpZJY"
       },
       "autoIncrement": true
     }

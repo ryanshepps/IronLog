@@ -3,9 +3,14 @@ import { View, StyleSheet, FlatList, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useNavigation, useFocusEffect, useIsFocused } from "@react-navigation/native";
+import {
+  useNavigation,
+  useFocusEffect,
+  useIsFocused,
+} from "@react-navigation/native";
 import { HeaderButton } from "@react-navigation/elements";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -24,6 +29,7 @@ import {
   UserPreferences,
 } from "@/types/workout";
 import { Exercise } from "@/types/workout";
+import type { MainTabParamList } from "@/navigation/MainTabNavigator";
 import {
   getCurrentWorkout,
   saveCurrentWorkout,
@@ -56,9 +62,8 @@ export default function LogScreen() {
 
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [showLogSet, setShowLogSet] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState<WorkoutExercise | null>(
-    null
-  );
+  const [selectedExercise, setSelectedExercise] =
+    useState<WorkoutExercise | null>(null);
   const [editingSet, setEditingSet] = useState<WorkoutSet | null>(null);
 
   const loadData = useCallback(async () => {
@@ -100,7 +105,8 @@ export default function LogScreen() {
   }, []);
 
   useEffect(() => {
-    const parent = navigation.getParent();
+    const parent =
+      navigation.getParent<BottomTabNavigationProp<MainTabParamList>>();
     if (!parent) return;
     const unsub = parent.addListener("tabPress", () => {
       if (isFocused) {
@@ -115,7 +121,7 @@ export default function LogScreen() {
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [loadData])
+    }, [loadData]),
   );
 
   useEffect(() => {
@@ -123,7 +129,10 @@ export default function LogScreen() {
       headerRight: () =>
         workout && workout.exercises.length > 0 ? (
           <HeaderButton onPress={handleFinishWorkout}>
-            <ThemedText type="body" style={{ color: theme.primary, fontWeight: "600" }}>
+            <ThemedText
+              type="body"
+              style={{ color: theme.primary, fontWeight: "600" }}
+            >
               Done
             </ThemedText>
           </HeaderButton>
@@ -136,7 +145,7 @@ export default function LogScreen() {
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     await saveWorkout({ ...workout, completedAt: Date.now() });
-    
+
     const newWorkout: Workout = {
       id: generateId(),
       date: formatDateLocal(new Date()),
@@ -150,7 +159,7 @@ export default function LogScreen() {
     if (!workout) return;
 
     const existingExercise = workout.exercises.find(
-      (e) => e.exerciseId === exercise.id
+      (e) => e.exerciseId === exercise.id,
     );
 
     if (existingExercise) {
@@ -187,7 +196,11 @@ export default function LogScreen() {
     setShowLogSet(true);
   };
 
-  const handleSaveSet = async (weight: number, reps: number, feeling: number) => {
+  const handleSaveSet = async (
+    weight: number,
+    reps: number,
+    feeling: number,
+  ) => {
     if (!workout || !selectedExercise) return;
 
     const timestamp = Date.now();
@@ -200,7 +213,7 @@ export default function LogScreen() {
             sets: ex.sets.map((s) =>
               s.id === editingSet.id
                 ? { ...s, weight, reps, feeling, timestamp }
-                : s
+                : s,
             ),
           };
         }
@@ -234,7 +247,7 @@ export default function LogScreen() {
       await updateExerciseHistory(
         selectedExercise.exerciseId,
         selectedExercise.exerciseName,
-        newSet
+        newSet,
       );
 
       setExerciseHistory((prev) => ({
@@ -248,7 +261,7 @@ export default function LogScreen() {
           lastPerformed: timestamp,
           personalRecord: Math.max(
             prev[selectedExercise.exerciseId]?.personalRecord || 0,
-            weight
+            weight,
           ),
         },
       }));
@@ -296,7 +309,7 @@ export default function LogScreen() {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const updatedExercises = workout.exercises.filter(
-      (e) => e.exerciseId !== exerciseId
+      (e) => e.exerciseId !== exerciseId,
     );
     const updatedWorkout = { ...workout, exercises: updatedExercises };
     setWorkout(updatedWorkout);
@@ -306,7 +319,9 @@ export default function LogScreen() {
   const handleToggleFavorite = async (exerciseId: string) => {
     const isFavorite = await toggleFavoriteStorage(exerciseId);
     setFavorites((prev) =>
-      isFavorite ? [exerciseId, ...prev] : prev.filter((id) => id !== exerciseId)
+      isFavorite
+        ? [exerciseId, ...prev]
+        : prev.filter((id) => id !== exerciseId),
     );
   };
 
@@ -372,16 +387,14 @@ export default function LogScreen() {
         exerciseId={selectedExercise?.exerciseId || ""}
         exerciseName={selectedExercise?.exerciseName || ""}
         lastPerformance={
-          selectedExercise
-            ? exerciseHistory[selectedExercise.exerciseId]
-            : null
+          selectedExercise ? exerciseHistory[selectedExercise.exerciseId] : null
         }
         editingSet={editingSet}
         units={units}
         currentSets={
           selectedExercise
             ? workout?.exercises.find(
-                (e) => e.exerciseId === selectedExercise.exerciseId
+                (e) => e.exerciseId === selectedExercise.exerciseId,
               )?.sets || []
             : []
         }

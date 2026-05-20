@@ -24,7 +24,11 @@ import { ExerciseHistoryModal } from "@/components/ExerciseHistoryModal";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { Exercise, ExerciseHistory, UserPreferences } from "@/types/workout";
-import { useExercises, useCreateExercise, useDeleteExercise } from "@/hooks/useExercises";
+import {
+  useExercises,
+  useCreateExercise,
+  useDeleteExercise,
+} from "@/hooks/useExercises";
 import { getAllExerciseHistory, getPreferences } from "@/lib/storage";
 import { buildExerciseFuse, searchExercises } from "@/lib/exerciseSearch";
 
@@ -67,7 +71,7 @@ function ExerciseItem({
     const date = new Date(timestamp);
     const now = new Date();
     const diffDays = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
     );
 
     if (diffDays === 0) return "Today";
@@ -97,13 +101,20 @@ function ExerciseItem({
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onPress();
       }}
-      onLongPress={isCustom ? () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        onDelete?.();
-      } : undefined}
+      onLongPress={
+        isCustom
+          ? () => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              onDelete?.();
+            }
+          : undefined
+      }
       style={({ pressed }) => [
         styles.exerciseItem,
-        { backgroundColor: theme.backgroundSecondary, opacity: pressed ? 0.7 : 1 },
+        {
+          backgroundColor: theme.backgroundSecondary,
+          opacity: pressed ? 0.7 : 1,
+        },
       ]}
     >
       <View style={styles.exerciseInfo}>
@@ -146,7 +157,9 @@ function ExerciseItem({
         >
           {content}
         </Swipeable>
-      ) : content}
+      ) : (
+        content
+      )}
     </Animated.View>
   );
 }
@@ -223,31 +236,40 @@ function AddExerciseModal({
               Category
             </ThemedText>
             <View style={styles.categoryPicker}>
-              {["Chest", "Back", "Shoulders", "Arms", "Legs", "Core", "Cardio", "Custom"].map(
-                (cat) => (
-                  <Pressable
-                    key={cat}
-                    onPress={() => setCategory(cat)}
-                    style={[
-                      styles.categoryOption,
-                      {
-                        backgroundColor:
-                          category === cat ? theme.primary : theme.backgroundSecondary,
-                      },
-                    ]}
+              {[
+                "Chest",
+                "Back",
+                "Shoulders",
+                "Arms",
+                "Legs",
+                "Core",
+                "Cardio",
+                "Custom",
+              ].map((cat) => (
+                <Pressable
+                  key={cat}
+                  onPress={() => setCategory(cat)}
+                  style={[
+                    styles.categoryOption,
+                    {
+                      backgroundColor:
+                        category === cat
+                          ? theme.primary
+                          : theme.backgroundSecondary,
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    type="small"
+                    style={{
+                      color: category === cat ? "#FFFFFF" : theme.text,
+                      fontWeight: "600",
+                    }}
                   >
-                    <ThemedText
-                      type="small"
-                      style={{
-                        color: category === cat ? "#FFFFFF" : theme.text,
-                        fontWeight: "600",
-                      }}
-                    >
-                      {cat}
-                    </ThemedText>
-                  </Pressable>
-                )
-              )}
+                    {cat}
+                  </ThemedText>
+                </Pressable>
+              ))}
             </View>
           </View>
 
@@ -280,13 +302,17 @@ export default function ExercisesScreen() {
   const createExercise = useCreateExercise();
   const deleteExerciseMutation = useDeleteExercise();
 
-  const [exerciseHistory, setExerciseHistory] = useState<Record<string, ExerciseHistory>>({});
+  const [exerciseHistory, setExerciseHistory] = useState<
+    Record<string, ExerciseHistory>
+  >({});
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
+    null,
+  );
 
   const loadData = useCallback(async () => {
     const [history, prefs] = await Promise.all([
@@ -300,7 +326,7 @@ export default function ExercisesScreen() {
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [loadData])
+    }, [loadData]),
   );
 
   const filteredExercises = useMemo(() => {
@@ -346,7 +372,7 @@ export default function ExercisesScreen() {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           },
         },
-      ]
+      ],
     );
   };
 
@@ -439,10 +465,16 @@ export default function ExercisesScreen() {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 setShowAddModal(true);
               }}
-              style={[styles.addNewButton, { backgroundColor: theme.backgroundSecondary }]}
+              style={[
+                styles.addNewButton,
+                { backgroundColor: theme.backgroundSecondary },
+              ]}
             >
               <Feather name="plus" size={20} color={theme.primary} />
-              <ThemedText type="body" style={{ color: theme.primary, fontWeight: "600" }}>
+              <ThemedText
+                type="body"
+                style={{ color: theme.primary, fontWeight: "600" }}
+              >
                 Add Custom Exercise
               </ThemedText>
             </Pressable>
