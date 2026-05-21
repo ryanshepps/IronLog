@@ -52,7 +52,7 @@
     "react-native-worklets": "0.5.1",
     "tsx": "^4.20.6",
     "zod": "^4.4.3",
-    "zod-validation-error": "^3.4.0"
+    "zod-validation-error": "^5.0.0"
   },
   "devDependencies": {
     "@types/node": "24.10.0",
