@@ -1,9 +1,9 @@
 packages:
   - .
 
-# pnpm 11 defaults to a 24-hour minimum release age. Renovate PRs already
-# commit reviewed frozen lockfiles, so keep CI installs deterministic.
-minimumReleaseAge: 0
+# Require packages to sit in the registry before install, reducing exposure to
+# compromised releases that are usually removed quickly.
+minimumReleaseAge: 7200
 
 allowBuilds:
   dtrace-provider: true
