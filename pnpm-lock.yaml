@@ -997,6 +997,9 @@ packages:
   '@expo/json-file@10.0.14':
     resolution: {integrity: sha512-yWwBFywFv+SxkJp/pIzzA416JVYflNUh7pqQzgaA6nXDqRyK7KfrqVzk8PdUfDnqbBcaZZxpzNssfQZzp5KHrA==}
 
+  '@expo/json-file@10.1.1':
+    resolution: {integrity: sha512-rmkjHrYLdfhGGW1TINHwJ/TIcKgtd+1iV+uTycEB74RWSax6U2klRiXXGgudKH6j2OrDSCm3edYTPukSVZtsIQ==}
+
   '@expo/json-file@8.3.3':
     resolution: {integrity: sha512-eZ5dld9AD0PrVRiIWpRkm5aIoWBw3kAyd8VkuWEy92sEthBKDDDHAnK2a0dw0Eil6j7rK7lS/Qaq/Zzngv2h5A==}
 
@@ -1027,8 +1030,8 @@ packages:
     resolution: {integrity: sha512-LcPjxJ5FOFpqPORm+5MRLV0CuYWMthJYV6eerF+lQVXKlvgSn3EOqaHC3Vf3H+vmB0f6G4kdvvFtg40vG4bIhA==}
     engines: {node: '>=12'}
 
-  '@expo/osascript@2.4.3':
-    resolution: {integrity: sha512-wbuj3EebM7W9hN/Wp4xTzKd6rQ2zKJzAxkFxkOOwyysLp0HOAgQ4/5RINyoS241pZUX2rUHq7mAJ7pcCQ8U0Ow==}
+  '@expo/osascript@2.5.1':
+    resolution: {integrity: sha512-NfXw0NalR6mWnLBS1/uP2v4yDPX17zg5D5SD1XCNtUMT/B4c91Lv/omhSUbwZA6BybwOr2PILrRo06q9nKHj2w==}
     engines: {node: '>=12'}
 
   '@expo/package-manager@1.10.5':
@@ -6112,10 +6115,10 @@ snapshots:
       '@expo/devcert': 1.2.1
       '@expo/env': 2.0.11
       '@expo/image-utils': 0.8.14(typescript@6.0.3)
-      '@expo/json-file': 10.0.14
+      '@expo/json-file': 10.1.1
       '@expo/metro': 54.2.0
       '@expo/metro-config': 54.0.15(expo@54.0.34(@babel/core@7.29.0)(graphql@16.8.1)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(typescript@6.0.3))
-      '@expo/osascript': 2.4.3
+      '@expo/osascript': 2.5.1
       '@expo/package-manager': 1.10.5
       '@expo/plist': 0.4.8
       '@expo/prebuild-config': 54.0.8(expo@54.0.34(@babel/core@7.29.0)(graphql@16.8.1)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(typescript@6.0.3))(typescript@6.0.3)
@@ -6272,7 +6275,7 @@ snapshots:
       '@babel/code-frame': 7.10.4
       '@expo/config-plugins': 54.0.4
       '@expo/config-types': 54.0.10
-      '@expo/json-file': 10.0.14
+      '@expo/json-file': 10.1.1
       deepmerge: 4.3.1
       getenv: 2.0.0
       glob: 13.0.6
@@ -6289,7 +6292,7 @@ snapshots:
     dependencies:
       '@expo/config-plugins': 55.0.7
       '@expo/config-types': 55.0.5
-      '@expo/json-file': 10.0.14
+      '@expo/json-file': 10.1.1
       '@expo/require-utils': 55.0.5(typescript@6.0.3)
       deepmerge: 4.3.1
       getenv: 2.0.0
@@ -6406,6 +6409,11 @@ snapshots:
       '@babel/code-frame': 7.29.0
       json5: 2.2.3
 
+  '@expo/json-file@10.1.1':
+    dependencies:
+      '@babel/code-frame': 7.29.0
+      json5: 2.2.3
+
   '@expo/json-file@8.3.3':
     dependencies:
       '@babel/code-frame': 7.10.4
@@ -6488,13 +6496,13 @@ snapshots:
       '@expo/spawn-async': 1.7.2
       exec-async: 2.2.0
 
-  '@expo/osascript@2.4.3':
+  '@expo/osascript@2.5.1':
     dependencies:
       '@expo/spawn-async': 1.8.0
 
   '@expo/package-manager@1.10.5':
     dependencies:
-      '@expo/json-file': 10.0.14
+      '@expo/json-file': 10.1.1
       '@expo/spawn-async': 1.8.0
       chalk: 4.1.2
       npm-package-arg: 11.0.3
@@ -6503,7 +6511,7 @@ snapshots:
 
   '@expo/package-manager@1.9.10':
     dependencies:
-      '@expo/json-file': 10.0.14
+      '@expo/json-file': 10.1.1
       '@expo/spawn-async': 1.7.2
       chalk: 4.1.2
       npm-package-arg: 11.0.3
@@ -6570,7 +6578,7 @@ snapshots:
       '@expo/config-plugins': 54.0.4
       '@expo/config-types': 54.0.10
       '@expo/image-utils': 0.8.14(typescript@6.0.3)
-      '@expo/json-file': 10.0.14
+      '@expo/json-file': 10.1.1
       '@react-native/normalize-colors': 0.81.5
       debug: 4.4.3(supports-color@8.1.1)
       expo: 54.0.34(@babel/core@7.29.0)(graphql@16.8.1)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(typescript@6.0.3)
