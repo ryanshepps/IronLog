@@ -62,7 +62,7 @@
     "babel-plugin-module-resolver": "^5.0.3",
     "dotenv": "^17.4.2",
     "eas-cli": "^18.13.1",
-    "eslint": "^9.39.4",
+    "eslint": "^10.4.0",
     "eslint-config-expo": "~10.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-node": "^0.4.0",
