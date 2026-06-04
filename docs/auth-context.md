@@ -27,12 +27,3 @@ flowchart TD
   G -- No --> J[Clear cache and sign out]
   J --> K[Stay on or return to auth stack]
 ```
-
-## Code Map
-
-- `client/App.tsx` restores navigation state after confirming a cached user.
-- `client/contexts/AuthContext.tsx` hydrates the cached user, then validates
-  Supabase auth in the background.
-- `client/navigation/RootStackNavigator.tsx` chooses the app or auth stack from
-  the hydrated local decision.
-- `client/lib/auth-cache-core.ts` owns cache parsing and startup route decisions.
