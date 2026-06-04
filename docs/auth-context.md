@@ -3,6 +3,9 @@
 IronLog starts from local state first. Network auth validation is authoritative,
 but it no longer blocks the first usable screen.
 
+The background auth check starts after local hydration, not because the auth
+stack rendered.
+
 ## Guarantees
 
 - No loading screen is shown between local auth hydration and network validation.
@@ -13,19 +16,16 @@ but it no longer blocks the first usable screen.
 
 ```mermaid
 flowchart TD
-  A[App launch] --> B[Read cached auth user]
-  A --> C[Restore saved navigation state]
-  B --> D{Cached user?}
-  D -- No --> E[Show auth stack]
-  D -- Yes --> F[Show last app state]
-  C --> F
-  E --> G[Run Supabase auth check in background]
-  F --> G
-  G --> H{Session and user valid?}
-  H -- Yes --> I[Refresh profile cache]
-  I --> J[Flush queued writes]
-  H -- No --> K[Clear cache and sign out]
-  K --> E
+  A[App launch] --> B[Hydrate local startup state]
+  B --> C{Cached user?}
+  C -- Yes --> D[Show saved app state]
+  C -- No --> E[Show auth stack]
+  B --> F[Start one background Supabase auth check]
+  F --> G{Session and user valid?}
+  G -- Yes --> H[Refresh profile cache]
+  H --> I[Flush queued writes]
+  G -- No --> J[Clear cache and sign out]
+  J --> K[Stay on or return to auth stack]
 ```
 
 ## Code Map
