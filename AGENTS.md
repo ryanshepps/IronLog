@@ -58,7 +58,7 @@ Requires Node 22 (see `.tool-versions`). Expo environment variables: `EXPO_PUBLI
 
 ## Workflow
 
-Always commit after each individual change rather than batching multiple changes into one commit. Do not ask the user before committing — just commit.
+Always commit after each individual change rather than batching multiple changes into one commit. Do not ask the user before committing — just commit. Do not commit historical artifacts such as plan docs unless explicitly asked to.
 
 ## Design Reference
 
