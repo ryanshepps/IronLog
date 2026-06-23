@@ -145,8 +145,8 @@ importers:
         specifier: ^17.4.2
         version: 17.4.2
       eas-cli:
-        specifier: ^20.2.0
-        version: 20.2.0(@types/node@24.13.2)(typescript@5.9.3)
+        specifier: ^20.3.0
+        version: 20.3.0(@types/node@24.13.2)(typescript@5.9.3)
       eslint:
         specifier: ^9.39.4
         version: 9.39.4
@@ -2418,8 +2418,8 @@ packages:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
 
-  eas-cli@20.2.0:
-    resolution: {integrity: sha512-nmwYdEMKfhL6wPvfmAYG2tcLnk6iI9Ua8km+4G1N6FFevjIi+9katJllAK8LuAKwhJnC7wDLT2NRlrUMW6zgrg==}
+  eas-cli@20.3.0:
+    resolution: {integrity: sha512-aITxilXdza6hqiJhdCHajh2bh8xMgjTDos4uMYDvqFSbO7zSE3c+hgYBU+EQ1rapoMfeAGp9SDc9+A0RNkLbJQ==}
     engines: {node: '>=20.0.0'}
     hasBin: true
 
@@ -6202,7 +6202,7 @@ snapshots:
 
   '@expo/code-signing-certificates@0.0.5':
     dependencies:
-      node-forge: 1.3.1
+      node-forge: 1.4.0
       nullthrows: 1.1.1
 
   '@expo/code-signing-certificates@0.0.6':
@@ -6239,7 +6239,7 @@ snapshots:
       getenv: 2.0.0
       glob: 13.0.6
       resolve-from: 5.0.0
-      semver: 7.5.4
+      semver: 7.8.4
       slugify: 1.6.9
       xcode: 3.0.1
       xml2js: 0.6.0
@@ -6399,7 +6399,7 @@ snapshots:
 
   '@expo/image-utils@0.6.5':
     dependencies:
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
       chalk: 4.1.2
       fs-extra: 9.0.0
       getenv: 1.0.0
@@ -6512,7 +6512,7 @@ snapshots:
 
   '@expo/osascript@2.1.4':
     dependencies:
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
       exec-async: 2.2.0
 
   '@expo/osascript@2.6.0':
@@ -6531,7 +6531,7 @@ snapshots:
   '@expo/package-manager@1.9.10':
     dependencies:
       '@expo/json-file': 10.2.0
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
       chalk: 4.1.2
       npm-package-arg: 11.0.3
       ora: 3.4.0
@@ -6539,7 +6539,7 @@ snapshots:
 
   '@expo/pkcs12@0.1.3':
     dependencies:
-      node-forge: 1.3.1
+      node-forge: 1.4.0
 
   '@expo/plist@0.2.0':
     dependencies:
@@ -6582,8 +6582,8 @@ snapshots:
       ejs: 3.1.10
       fs-extra: 10.1.0
       http-call: 5.3.0
-      semver: 7.5.4
-      tslib: 2.6.2
+      semver: 7.8.4
+      tslib: 2.8.1
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -6642,7 +6642,7 @@ snapshots:
       '@segment/loosely-validate-event': 2.0.0
       fetch-retry: 4.1.1
       md5: 2.3.0
-      node-fetch: 2.6.7
+      node-fetch: 2.7.0
       remove-trailing-slash: 0.1.1
       uuid: 8.3.2
     transitivePeerDependencies:
@@ -6664,7 +6664,7 @@ snapshots:
     dependencies:
       '@expo/eas-build-job': 20.1.0
       '@expo/logger': 20.0.0
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
       arg: 5.0.2
       fs-extra: 11.2.0
       joi: 17.13.4
@@ -6672,7 +6672,7 @@ snapshots:
       lodash.clonedeep: 4.5.0
       lodash.get: 4.4.2
       uuid: 9.0.1
-      yaml: 2.6.0
+      yaml: 2.9.0
 
   '@expo/sudo-prompt@9.3.2': {}
 
@@ -6681,7 +6681,7 @@ snapshots:
   '@expo/turtle-spawn@20.0.0':
     dependencies:
       '@expo/logger': 20.0.0
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
 
   '@expo/vector-icons@15.1.1(expo-font@14.0.12(expo@54.0.35(@babel/core@7.29.7)(graphql@16.8.1)(react-native@0.81.5(@babel/core@7.29.7)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(typescript@5.9.3))(react-native@0.81.5(@babel/core@7.29.7)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.29.7)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
     dependencies:
@@ -6873,7 +6873,7 @@ snapshots:
       supports-color: 8.1.1
       supports-hyperlinks: 2.3.0
       ts-node: 10.9.2(@types/node@24.13.2)(typescript@5.9.3)
-      tslib: 2.6.2
+      tslib: 2.8.1
       widest-line: 3.1.0
       wordwrap: 1.0.0
       wrap-ansi: 7.0.0
@@ -7470,7 +7470,7 @@ snapshots:
 
   '@urql/exchange-retry@1.2.0(graphql@16.8.1)':
     dependencies:
-      '@urql/core': 4.0.11(graphql@16.8.1)
+      '@urql/core': 5.2.0(graphql@16.8.1)
       wonka: 6.3.6
     transitivePeerDependencies:
       - graphql
@@ -8219,7 +8219,7 @@ snapshots:
       es-errors: 1.3.0
       gopd: 1.2.0
 
-  eas-cli@20.2.0(@types/node@24.13.2)(typescript@5.9.3):
+  eas-cli@20.3.0(@types/node@24.13.2)(typescript@5.9.3):
     dependencies:
       '@expo/apple-utils': 2.1.19
       '@expo/code-signing-certificates': 0.0.5
@@ -9174,7 +9174,7 @@ snapshots:
       array-union: 2.1.0
       dir-glob: 3.0.1
       fast-glob: 3.3.2
-      ignore: 5.3.0
+      ignore: 5.3.2
       merge2: 1.4.1
       slash: 3.0.0
 
@@ -9191,7 +9191,7 @@ snapshots:
   graphql-tag@2.12.6(graphql@16.8.1):
     dependencies:
       graphql: 16.8.1
-      tslib: 2.6.2
+      tslib: 2.8.1
 
   graphql@16.8.1: {}
 
@@ -9581,7 +9581,7 @@ snapshots:
 
   jks-js@1.1.0:
     dependencies:
-      node-forge: 1.3.1
+      node-forge: 1.4.0
       node-int64: 0.4.0
       node-rsa: 1.1.1
 
@@ -10303,7 +10303,7 @@ snapshots:
     dependencies:
       hosted-git-info: 7.0.2
       proc-log: 4.2.0
-      semver: 7.5.4
+      semver: 7.8.4
       validate-npm-package-name: 5.0.1
 
   nth-check@2.1.1:
