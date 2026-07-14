@@ -68,7 +68,7 @@
     "eslint-import-resolver-node": "^0.4.0",
     "eslint-plugin-prettier": "^5.5.6",
     "pg": "^8.22.0",
-    "prettier": "3.9.4",
+    "prettier": "3.9.5",
     "typescript": "~5.9.3"
   },
   "private": true,
