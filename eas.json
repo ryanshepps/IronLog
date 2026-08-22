@@ -1,6 +1,7 @@
 {
   "build": {
     "production": {
+      "node": "24.19.0",
       "ios": {
         "buildConfiguration": "Release",
         "image": "macos-sequoia-15.6-xcode-26.2"
