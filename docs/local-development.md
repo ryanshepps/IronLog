@@ -52,6 +52,11 @@ Scan the QR code with your iPhone camera to open in Expo Go.
 ## Data Flow
 
 - Supabase Auth owns signup, login, logout, and session persistence.
+- App launch reads a non-token cached auth profile from AsyncStorage first so
+  the last app/auth shell can render without waiting on Supabase.
+- Supabase auth validation runs in the background after local hydration. If the
+  session is missing or invalid, the cached profile is cleared and the app
+  routes to login without showing an intermediate loading screen.
 - `public.profiles` stores display name and units.
 - Active workout writes commit to `AsyncStorage` first.
 - Supabase writes are attempted after local persistence and queued when offline
