@@ -15,6 +15,7 @@ import {
 } from "@/lib/auth-cache";
 import { getCurrentProfile, upsertCurrentProfile } from "@/lib/profile";
 import { flushQueue } from "@/lib/write-queue";
+import { shouldClearCachedUserAfterAuthFailure } from "@/lib/auth-reconciliation";
 
 export interface AuthUser {
   id: string;
@@ -94,6 +95,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase.auth.getUser();
 
       if (error || !data.user) {
+        if (error && !shouldClearCachedUserAfterAuthFailure(error)) {
+          console.error("Error validating user:", error);
+          return;
+        }
+
         await clearCachedAuthUserSafely();
         await supabase.auth.signOut();
         setUser(null);
@@ -114,8 +120,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       flushQueue().catch((e) => console.error("Queue flush error:", e));
     } catch (error) {
       console.error("Error refreshing user:", error);
-      await clearCachedAuthUserSafely();
-      setUser(null);
     } finally {
       setIsCheckingAuth(false);
     }

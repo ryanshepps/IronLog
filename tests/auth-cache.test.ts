@@ -1,6 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  AuthRetryableFetchError,
+  AuthSessionMissingError,
+} from "@supabase/supabase-js";
+import {
   AUTH_USER_CACHE_KEY,
   clearCachedAuthUserFromStorage,
   getStartupAuthRoute,
@@ -11,6 +15,7 @@ import {
   type AuthUserSnapshot,
   type KeyValueStorage,
 } from "../client/lib/auth-cache-core";
+import { shouldClearCachedUserAfterAuthFailure } from "../client/lib/auth-reconciliation";
 
 function createStorage(initial: Record<string, string> = {}) {
   const values = new Map(Object.entries(initial));
@@ -94,4 +99,26 @@ test("local auth hydration only touches storage", async () => {
 
   assert.deepEqual(await readCachedAuthUserFromStorage(storage), cachedUser);
   assert.deepEqual(calls, [`get:${AUTH_USER_CACHE_KEY}`]);
+});
+
+test("auth reconciliation preserves cached users for transient failures", () => {
+  assert.equal(
+    shouldClearCachedUserAfterAuthFailure(
+      new AuthRetryableFetchError("network unavailable", 0),
+    ),
+    false,
+  );
+  assert.equal(
+    shouldClearCachedUserAfterAuthFailure(
+      new TypeError("Network request failed"),
+    ),
+    false,
+  );
+});
+
+test("auth reconciliation clears cached users for invalid sessions", () => {
+  assert.equal(
+    shouldClearCachedUserAfterAuthFailure(new AuthSessionMissingError()),
+    true,
+  );
 });
