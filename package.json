@@ -72,5 +72,10 @@
     "typescript": "~5.9.3"
   },
   "private": true,
+  "expo": {
+    "install": {
+      "exclude": ["eslint-config-expo"]
+    }
+  },
   "packageManager": "pnpm@11.22.0"
 }
