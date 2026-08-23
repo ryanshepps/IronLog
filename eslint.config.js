@@ -3,8 +3,17 @@ const { defineConfig } = require("eslint/config");
 const expoConfig = require("eslint-config-expo/flat");
 const eslintPluginPrettierRecommended = require("eslint-plugin-prettier/recommended");
 
+const expoConfigWithoutReactRules = expoConfig.map((config) => ({
+  ...config,
+  rules: Object.fromEntries(
+    Object.entries(config.rules ?? {}).filter(
+      ([rule]) => !rule.startsWith("react/"),
+    ),
+  ),
+}));
+
 module.exports = defineConfig([
-  expoConfig,
+  expoConfigWithoutReactRules,
   eslintPluginPrettierRecommended,
   {
     ignores: ["dist/**", "static-build/**", ".expo/**"],
