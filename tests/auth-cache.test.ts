@@ -15,7 +15,10 @@ import {
   type AuthUserSnapshot,
   type KeyValueStorage,
 } from "../client/lib/auth-cache-core";
-import { shouldClearCachedUserAfterAuthFailure } from "../client/lib/auth-reconciliation";
+import {
+  createStartupAuthReconciler,
+  shouldClearCachedUserAfterAuthFailure,
+} from "../client/lib/auth-reconciliation";
 
 function createStorage(initial: Record<string, string> = {}) {
   const values = new Map(Object.entries(initial));
@@ -121,4 +124,32 @@ test("auth reconciliation clears cached users for invalid sessions", () => {
     shouldClearCachedUserAfterAuthFailure(new AuthSessionMissingError()),
     true,
   );
+});
+
+test("startup auth reconciles once when hydration finishes first", () => {
+  const reconciliations: boolean[] = [];
+  const startupAuth = createStartupAuthReconciler((hasSession) => {
+    reconciliations.push(hasSession);
+  });
+
+  startupAuth.markHydrated();
+  assert.deepEqual(reconciliations, []);
+
+  startupAuth.recordInitialSession(true);
+  startupAuth.recordInitialSession(false);
+  assert.deepEqual(reconciliations, [true]);
+});
+
+test("startup auth reconciles once when the initial session arrives first", () => {
+  const reconciliations: boolean[] = [];
+  const startupAuth = createStartupAuthReconciler((hasSession) => {
+    reconciliations.push(hasSession);
+  });
+
+  startupAuth.recordInitialSession(false);
+  assert.deepEqual(reconciliations, []);
+
+  startupAuth.markHydrated();
+  startupAuth.markHydrated();
+  assert.deepEqual(reconciliations, [false]);
 });
