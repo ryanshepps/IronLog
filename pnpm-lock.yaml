@@ -145,8 +145,8 @@ importers:
         specifier: ^17.4.2
         version: 17.4.2
       eas-cli:
-        specifier: ^22.0.0
-        version: 22.0.0(@types/node@24.13.3)(supports-color@8.1.1)(typescript@5.9.3)
+        specifier: ^22.2.0
+        version: 22.2.0(@types/node@24.13.3)(supports-color@8.1.1)(typescript@5.9.3)
       eslint:
         specifier: ^10.8.1
         version: 10.8.1(supports-color@8.1.1)
@@ -1090,8 +1090,8 @@ packages:
     resolution: {integrity: sha512-eb9xxd/LbuEGSdua4NumCu/McVB9EM+F/JxB9pWgnERw4HQ9XyTNH1KapG6oqLWR8TuRK2LQfzJlmNi94CVobw==}
     engines: {node: '>=12'}
 
-  '@expo/steps@22.0.0':
-    resolution: {integrity: sha512-zkd7IDvDAgWs2yuMTfLtKGYCwxE4dJJG++kSaXBLP4vIEWkROwDhHwBwBKKvRYcTskinyh19AdeSQ3rQB3aI6w==}
+  '@expo/steps@22.1.0':
+    resolution: {integrity: sha512-E4CtFq3xNj6StMCsATevwJrIMcKP8SGDJAefKVd5XT9g+NrNhyNM6mX9xY+Gts1y++AJeQ3EJ7nD55QsHd5tKg==}
     engines: {node: '>=18'}
 
   '@expo/sudo-prompt@9.3.2':
@@ -1771,11 +1771,6 @@ packages:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
 
-  agent-cli-detector@0.1.2:
-    resolution: {integrity: sha512-qdZ/9JFORtTKJNhT/IczMeEfEUbUU0K5umYeiIQHX+AjHs+Y9SXVzSgaYlpZeyNMrvuh2HpZiOTpvS57iPfBkQ==}
-    engines: {node: '>=18.18'}
-    hasBin: true
-
   agent-cli-detector@0.1.6:
     resolution: {integrity: sha512-vKrPeEVN3upDF3GjWxsWBbwQgMtNJ8VB1cduPvK3svmmz4ENpS7yaPxbogsbe3w+xp9xp2Cu+0Ar41rjAR4+lA==}
     engines: {node: '>=18.18'}
@@ -2411,8 +2406,8 @@ packages:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
 
-  eas-cli@22.0.0:
-    resolution: {integrity: sha512-25a1wR+cLkr5ONKQANanYRyXLdO4CYkSZAP//PqdpezBXbmb/hPWc2i2sg5MJ2O+5bJUbu1FAY64xPZ9VfsHbg==}
+  eas-cli@22.2.0:
+    resolution: {integrity: sha512-q+03oX9lXB/QjqQkn12y1TQiriU7Ia1TKPwh8oK49xrNs6WEkLPoXaYo2yZa+faZzMOgyDdYym1dLA3u+a2JWA==}
     engines: {node: '>=20.0.0'}
     hasBin: true
 
@@ -6237,7 +6232,7 @@ snapshots:
       getenv: 2.0.0
       glob: 13.0.6
       resolve-from: 5.0.0
-      semver: 7.5.4
+      semver: 7.8.5
       slugify: 1.6.9
       xcode: 3.0.1
       xml2js: 0.6.0
@@ -6378,7 +6373,7 @@ snapshots:
 
   '@expo/image-utils@0.7.6':
     dependencies:
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
       chalk: 4.1.2
       getenv: 2.0.0
       jimp-compact: 0.16.1
@@ -6489,7 +6484,7 @@ snapshots:
 
   '@expo/osascript@2.1.4':
     dependencies:
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
       exec-async: 2.2.0
 
   '@expo/osascript@2.7.1':
@@ -6508,7 +6503,7 @@ snapshots:
   '@expo/package-manager@1.9.10':
     dependencies:
       '@expo/json-file': 10.2.0
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
       chalk: 4.1.2
       npm-package-arg: 11.0.3
       ora: 3.4.0
@@ -6553,8 +6548,8 @@ snapshots:
       ejs: 3.1.10
       fs-extra: 10.1.0
       http-call: 5.3.0(supports-color@8.1.1)
-      semver: 7.5.4
-      tslib: 2.6.2
+      semver: 7.8.5
+      tslib: 2.8.1
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -6612,7 +6607,7 @@ snapshots:
       '@segment/loosely-validate-event': 2.0.0
       fetch-retry: 4.1.1
       md5: 2.3.0
-      node-fetch: 2.6.7
+      node-fetch: 2.7.0
       remove-trailing-slash: 0.1.1
       uuid: 8.3.2
     transitivePeerDependencies:
@@ -6630,11 +6625,11 @@ snapshots:
     dependencies:
       cross-spawn: 7.0.6
 
-  '@expo/steps@22.0.0':
+  '@expo/steps@22.1.0':
     dependencies:
       '@expo/eas-build-job': 22.0.0
       '@expo/logger': 22.0.0
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
       arg: 5.0.2
       fast-glob: 3.3.2
       fs-extra: 11.2.0
@@ -6643,7 +6638,7 @@ snapshots:
       lodash.clonedeep: 4.5.0
       lodash.get: 4.4.2
       uuid: 9.0.1
-      yaml: 2.6.0
+      yaml: 2.9.0
       zod: 4.4.3
 
   '@expo/sudo-prompt@9.3.2': {}
@@ -6653,7 +6648,7 @@ snapshots:
   '@expo/turtle-spawn@22.0.0':
     dependencies:
       '@expo/logger': 22.0.0
-      '@expo/spawn-async': 1.7.2
+      '@expo/spawn-async': 1.8.0
 
   '@expo/vector-icons@15.1.1(expo-font@14.0.12(expo@54.0.37(@babel/core@7.29.7(supports-color@8.1.1))(graphql@16.8.1)(react-native@0.81.5(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@19.1.17)(react@19.1.0)(supports-color@8.1.1))(react@19.1.0)(supports-color@8.1.1)(typescript@5.9.3))(react-native@0.81.5(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@19.1.17)(react@19.1.0)(supports-color@8.1.1))(react@19.1.0))(react-native@0.81.5(@babel/core@7.29.7(supports-color@8.1.1))(@types/react@19.1.17)(react@19.1.0)(supports-color@8.1.1))(react@19.1.0)':
     dependencies:
@@ -6845,7 +6840,7 @@ snapshots:
       supports-color: 8.1.1
       supports-hyperlinks: 2.3.0
       ts-node: 10.9.2(@types/node@24.13.3)(typescript@5.9.3)
-      tslib: 2.6.2
+      tslib: 2.8.1
       widest-line: 3.1.0
       wordwrap: 1.0.0
       wrap-ansi: 7.0.0
@@ -7444,7 +7439,7 @@ snapshots:
 
   '@urql/exchange-retry@1.2.0(graphql@16.8.1)':
     dependencies:
-      '@urql/core': 4.0.11(graphql@16.8.1)
+      '@urql/core': 5.2.0(graphql@16.8.1)
       wonka: 6.3.6
     transitivePeerDependencies:
       - graphql
@@ -7489,8 +7484,6 @@ snapshots:
       - supports-color
 
   agent-base@7.1.4: {}
-
-  agent-cli-detector@0.1.2: {}
 
   agent-cli-detector@0.1.6: {}
 
@@ -8195,7 +8188,7 @@ snapshots:
       es-errors: 1.3.0
       gopd: 1.2.0
 
-  eas-cli@22.0.0(@types/node@24.13.3)(supports-color@8.1.1)(typescript@5.9.3):
+  eas-cli@22.2.0(@types/node@24.13.3)(supports-color@8.1.1)(typescript@5.9.3):
     dependencies:
       '@expo/apple-utils': 2.1.22
       '@expo/code-signing-certificates': 0.0.5
@@ -8217,7 +8210,7 @@ snapshots:
       '@expo/results': 1.0.0
       '@expo/rudder-sdk-node': 1.1.1
       '@expo/spawn-async': 1.7.2
-      '@expo/steps': 22.0.0
+      '@expo/steps': 22.1.0
       '@expo/timeago.js': 1.0.0
       '@oclif/core': 4.13.5
       '@oclif/plugin-autocomplete': 3.2.56(supports-color@8.1.1)
@@ -8225,7 +8218,7 @@ snapshots:
       '@sentry/node': 7.77.0(supports-color@8.1.1)
       '@urql/core': 4.0.11(graphql@16.8.1)
       '@urql/exchange-retry': 1.2.0(graphql@16.8.1)
-      agent-cli-detector: 0.1.2
+      agent-cli-detector: 0.1.6
       ajv: 8.11.0
       ajv-formats: 2.1.1(ajv@8.11.0)
       better-opn: 3.0.2
@@ -9142,7 +9135,7 @@ snapshots:
       array-union: 2.1.0
       dir-glob: 3.0.1
       fast-glob: 3.3.2
-      ignore: 5.3.0
+      ignore: 5.3.2
       merge2: 1.4.1
       slash: 3.0.0
 
@@ -9159,7 +9152,7 @@ snapshots:
   graphql-tag@2.12.6(graphql@16.8.1):
     dependencies:
       graphql: 16.8.1
-      tslib: 2.6.2
+      tslib: 2.8.1
 
   graphql@16.8.1: {}
 
@@ -10280,7 +10273,7 @@ snapshots:
     dependencies:
       hosted-git-info: 7.0.2
       proc-log: 4.2.0
-      semver: 7.5.4
+      semver: 7.8.5
       validate-npm-package-name: 5.0.1
 
   nth-check@2.1.1:
