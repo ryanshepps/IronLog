@@ -51,3 +51,4 @@ app-example
 
 # build artifacts
 *.ipa
+.artifacts/

@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "expo:dev": "npx expo start --localhost",
+    "ios:observe": "bash scripts/observe-ios.sh",
+    "ios:screenshot": "bash scripts/screenshot-ios.sh",
     "expo:static:build": "npx expo export --output-dir static-build",
     "lint": "npx expo lint",
     "lint:fix": "npx expo lint --fix",
