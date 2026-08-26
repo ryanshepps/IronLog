@@ -35,6 +35,7 @@ yarn-error.*
 # local env files
 .env
 .env*.local
+.demo-account.local
 
 # local working notes — never commit
 SPEC.md
