@@ -49,26 +49,6 @@ pnpm expo:dev
 
 Scan the QR code with your iPhone camera to open in Expo Go.
 
-## Observe the iOS Simulator
-
-Build the local iOS app, boot an available iPhone simulator, launch IronLog,
-and capture Metro, native build, and runtime logs:
-
-```bash
-pnpm ios:observe
-```
-
-Logs are written to `.artifacts/ios-observe/latest/`. Keep that command running
-while reproducing the issue. In another terminal, capture the current screen:
-
-```bash
-pnpm ios:screenshot
-```
-
-Screenshots are written to `.artifacts/ios-screenshots/`. Set
-`IOS_SIMULATOR_UDID` before `pnpm ios:observe` to select a specific installed
-iPhone simulator.
-
 ## Data Flow
 
 - Supabase Auth owns signup, login, logout, and session persistence.
