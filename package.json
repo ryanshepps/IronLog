@@ -76,7 +76,9 @@
   "private": true,
   "expo": {
     "install": {
-      "exclude": ["eslint-config-expo"]
+      "exclude": [
+        "eslint-config-expo"
+      ]
     }
   },
   "packageManager": "pnpm@11.22.0"
