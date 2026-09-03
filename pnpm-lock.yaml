@@ -123,11 +123,11 @@ importers:
         specifier: ^4.23.12
         version: 4.23.12
       zod:
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.5.4
+        version: 4.5.4
       zod-validation-error:
         specifier: ^5.0.0
-        version: 5.0.0(zod@4.5.2)
+        version: 5.0.0(zod@4.5.4)
     devDependencies:
       '@types/node':
         specifier: 24.13.3
@@ -5341,8 +5341,8 @@ packages:
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
-  zod@4.5.2:
-    resolution: {integrity: sha512-XkYXCol10+ba/6F/cueWV+TezUeOqXW0hdeJt5CdXjTYeAgAQg5N03RQdJ80mhfFE72+pblvYMW4wy2Qp4Qbrg==}
+  zod@4.5.4:
+    resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
 
 snapshots:
 
@@ -6326,7 +6326,7 @@ snapshots:
       '@expo/turtle-spawn': 23.0.0
       joi: 17.13.6
       semver: 7.8.5
-      zod: 4.5.2
+      zod: 4.5.4
 
   '@expo/eas-json@23.0.0':
     dependencies:
@@ -6646,7 +6646,7 @@ snapshots:
       lodash.get: 4.4.2
       uuid: 9.0.1
       yaml: 2.9.0
-      zod: 4.5.2
+      zod: 4.5.4
 
   '@expo/sudo-prompt@9.3.2': {}
 
@@ -8290,7 +8290,7 @@ snapshots:
       uuid: 9.0.1
       wrap-ansi: 7.0.0
       yaml: 2.6.0
-      zod: 4.5.2
+      zod: 4.5.4
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -8607,8 +8607,8 @@ snapshots:
       '@babel/parser': 7.29.8
       eslint: 10.9.1(supports-color@8.1.1)
       hermes-parser: 0.25.1
-      zod: 4.5.2
-      zod-validation-error: 4.0.2(zod@4.5.2)
+      zod: 4.5.4
+      zod-validation-error: 4.0.2(zod@4.5.4)
     transitivePeerDependencies:
       - supports-color
 
@@ -11691,12 +11691,12 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zod-validation-error@4.0.2(zod@4.5.2):
+  zod-validation-error@4.0.2(zod@4.5.4):
     dependencies:
-      zod: 4.5.2
+      zod: 4.5.4
 
-  zod-validation-error@5.0.0(zod@4.5.2):
+  zod-validation-error@5.0.0(zod@4.5.4):
     dependencies:
-      zod: 4.5.2
+      zod: 4.5.4
 
-  zod@4.5.2: {}
+  zod@4.5.4: {}
