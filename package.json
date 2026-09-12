@@ -61,8 +61,8 @@
     "@types/react": "~19.1.17",
     "babel-plugin-module-resolver": "^5.0.3",
     "dotenv": "^17.4.2",
-    "eas-cli": "^23.1.0",
-    "eslint": "^10.9.1",
+    "eas-cli": "^23.2.0",
+    "eslint": "^10.10.0",
     "eslint-config-expo": "~57.0.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-node": "^0.4.0",
@@ -77,5 +77,5 @@
       "exclude": ["eslint-config-expo"]
     }
   },
-  "packageManager": "pnpm@12.1.0"
+  "packageManager": "pnpm@12.3.4"
 }
