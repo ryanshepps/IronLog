@@ -17,12 +17,12 @@
     "@expo-google-fonts/nunito": "^0.4.2",
     "@expo/vector-icons": "^15.1.1",
     "@react-native-async-storage/async-storage": "^2.2.0",
-    "@react-navigation/bottom-tabs": "^7.18.18",
-    "@react-navigation/elements": "^2.9.40",
-    "@react-navigation/native": "^7.3.18",
-    "@react-navigation/native-stack": "^7.18.10",
+    "@react-navigation/bottom-tabs": "^7.19.2",
+    "@react-navigation/elements": "^2.9.43",
+    "@react-navigation/native": "^7.4.1",
+    "@react-navigation/native-stack": "^7.19.2",
     "@supabase/supabase-js": "2.105.4",
-    "@tanstack/react-query": "^5.102.8",
+    "@tanstack/react-query": "^5.103.2",
     "expo": "^54.0.37",
     "expo-blur": "^15.0.8",
     "expo-build-properties": "~1.0.10",
@@ -51,24 +51,24 @@
     "react-native-url-polyfill": "^4.0.0",
     "react-native-web": "~0.21.2",
     "react-native-worklets": "0.5.1",
-    "tsx": "^4.23.13",
-    "zod": "^4.5.4",
+    "tsx": "^4.23.15",
+    "zod": "^4.6.5",
     "zod-validation-error": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "24.13.3",
+    "@types/node": "24.13.6",
     "@types/pg": "^8.23.1",
     "@types/react": "~19.1.17",
     "babel-plugin-module-resolver": "^5.0.3",
-    "dotenv": "^18.0.0",
-    "eas-cli": "^23.1.0",
-    "eslint": "^10.9.1",
+    "dotenv": "^18.0.1",
+    "eas-cli": "^23.2.0",
+    "eslint": "^10.11.0",
     "eslint-config-expo": "~57.0.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-node": "^0.4.0",
     "eslint-plugin-prettier": "^5.5.6",
     "pg": "^8.23.0",
-    "prettier": "3.9.6",
+    "prettier": "3.9.8",
     "typescript": "~5.9.3"
   },
   "private": true,
@@ -77,5 +77,5 @@
       "exclude": ["eslint-config-expo"]
     }
   },
-  "packageManager": "pnpm@12.1.0"
+  "packageManager": "pnpm@12.5.1"
 }
